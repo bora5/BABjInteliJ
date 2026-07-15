@@ -3,15 +3,22 @@ plugins {
     id("org.jetbrains.intellij.platform") version "2.5.0"
 }
 
-repositories {
-    mavenCentral()
-    intellijPlatform { defaultRepositories() }
-}
+group = providers.gradleProperty("group").get()
+version = providers.gradleProperty("version").get()
+
+// Repositories are declared once, at the settings level (settings.gradle.kts).
 
 dependencies {
     intellijPlatform {
-        intellijIdeaCommunity("2024.3")   // ili Ultimate ako ti treba JPA/Spring podrška
-        bundledPlugin("com.intellij.java") // PSI za Javu
+        // 2024.3 runs on JDK 21. Community Edition is enough — we only use Java PSI.
+        intellijIdeaCommunity("2024.3")
+        bundledPlugin("com.intellij.java")
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 

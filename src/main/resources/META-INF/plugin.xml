@@ -1,33 +1,42 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
     <id>rs.co.bora5.plugins.BABjInteliJ</id>
+    <name>BABj Support</name>
+    <vendor url="https://bora5.co.rs">bora5</vendor>
 
-    <!-- Public plugin name should be written in Title Case.
-     Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
-    <name>BABjInteliJ</name>
-
-    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor url="https://www.yourcompany.com">YourCompany</vendor>
-
-    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
-         Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
     <description><![CDATA[
-        Enter short description for your plugin here.<br>
-        <em>most HTML tags may be used</em>
+        Razvojna podrška za <b>babj</b> biblioteku (rs.co.bora5.programs.bab).<br>
+        <ul>
+          <li><b>Generator</b> — iz JPA entiteta napravi kvartet DTO / Home / View / EditWindow
+              po babj konvencijama (Alt+Insert &rarr; <i>babj CRUD</i>).</li>
+          <li><b>Live templates</b> — <code>bview</code>, <code>bwin</code>, <code>bhome</code>,
+              <code>bdto</code>.</li>
+          <li><b>Inspekcija</b> — upozorava kad GenericView nema prateći Edit&lt;Entity&gt;Window
+              (sa quick-fix-om koji ga generiše).</li>
+        </ul>
         ]]></description>
 
-    <!-- Product and plugin compatibility requirements.
-         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
-    <depends>com.intellij.modules.lsp</depends>
-    <depends>com.intellij.database</depends>
+    <!-- Java PSI je jedina neophodna zavisnost; radi i na Community Edition. -->
     <depends>com.intellij.java</depends>
-    <depends>org.intellij.plugins.markdown</depends>
 
-
-    <!-- Extensions defined by the plugin.
-         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
+        <defaultLiveTemplates file="/liveTemplates/babj.xml"/>
+
+        <localInspection language="JAVA"
+                         shortName="BabjMissingEditWindow"
+                         displayName="babj: GenericView bez Edit prozora"
+                         groupName="babj"
+                         enabledByDefault="true"
+                         level="WARNING"
+                         implementationClass="rs.co.bora5.plugins.babj.inspection.MissingEditWindowInspection"/>
     </extensions>
 
+    <actions>
+        <action id="babj.GenerateCrud"
+                class="rs.co.bora5.plugins.babj.action.GenerateBabjCrudAction"
+                text="babj CRUD (DTO, Home, View, Window)"
+                description="Generiše babj kvartet iz izabranog JPA entiteta">
+            <add-to-group group-id="GenerateGroup" anchor="last"/>
+        </action>
+    </actions>
 </idea-plugin>
