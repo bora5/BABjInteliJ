@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+### Added — BABj navigation and completion
+
+- Added gutter navigation between related Entity, DTO, Home, View, and EditWindow classes.
+- Added a visual **BABj Navigator** tool window that shows the complete module chain and missing
+  artifacts.
+- Added context-aware completion for BABj annotation property names and full `@ColumnNames`
+  definitions.
+- Added an inspection for invalid property references in filter, visibility, status, uniqueness,
+  and Vaadin binding annotations.
+- Added Borivoj Bogdanović as the plugin author and raised the plugin version to **1.1.0**.
+
 ### Changed
 
 - Standardized all user-facing plugin messages, inspection descriptions, live-template descriptions,
