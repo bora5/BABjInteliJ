@@ -11,7 +11,7 @@ import com.intellij.psi.PsiFile;
 import rs.co.bora5.plugins.babj.model.GenerationContext;
 
 /**
- * Orchestrates writing the selected babj artifacts for one entity. Must run inside a write action.
+ * Orchestrates writing the selected BABj artifacts for one entity. Must run inside a write action.
  */
 public final class BABjGenerator {
 

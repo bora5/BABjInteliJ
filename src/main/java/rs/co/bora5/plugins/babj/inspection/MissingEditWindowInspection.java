@@ -18,7 +18,7 @@ import com.intellij.psi.util.PsiUtil;
 
 /**
  * Flags a {@code GenericView} subclass that has no matching {@code Edit<Entity>Window}, which the
- * babj convention requires for every editable view. Offers a quick fix that generates the window.
+ * BABj convention requires for every editable view. Offers a quick fix that generates the window.
  */
 public class MissingEditWindowInspection extends AbstractBaseJavaLocalInspectionTool {
 
@@ -48,7 +48,7 @@ public class MissingEditWindowInspection extends AbstractBaseJavaLocalInspection
 
         ProblemDescriptor problem = manager.createProblemDescriptor(
                 anchor,
-                "Nedostaje " + expected + " — po babj konvenciji svaki editabilni GenericView ima svoj Edit prozor.",
+                "Nedostaje " + expected + " — po BABj konvenciji svaki editabilni GenericView ima svoj Edit prozor.",
                 new CreateEditWindowQuickFix(entity.getName(), entity.getQualifiedName()),
                 ProblemHighlightType.WARNING,
                 isOnTheFly);

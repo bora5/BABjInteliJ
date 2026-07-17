@@ -3,7 +3,7 @@ package rs.co.bora5.plugins.babj.model;
 import java.util.List;
 
 /**
- * All parameters needed to render the babj quartet for one entity: the resolved base package,
+ * All parameters needed to render the BABj quartet for one entity: the resolved base package,
  * entity name, the operator ({@code K}) type, the view's declarative metadata (role, route, title,
  * class name) and which artifacts to emit.
  */

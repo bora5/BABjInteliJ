@@ -24,7 +24,7 @@ import rs.co.bora5.plugins.babj.model.EntityModel;
 import rs.co.bora5.plugins.babj.model.GenerationContext;
 
 /**
- * "babj CRUD" generate action: from the JPA entity under the caret, produces the DTO / Home / View /
+ * "BABj CRUD" generate action: from the JPA entity under the caret, produces the DTO / Home / View /
  * EditWindow quartet in the conventional sibling packages.
  */
 public class GenerateBABjCrudAction extends AnAction {
