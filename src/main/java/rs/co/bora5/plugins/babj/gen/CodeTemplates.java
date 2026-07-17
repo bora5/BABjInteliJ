@@ -7,6 +7,7 @@ import java.util.TreeSet;
 
 import rs.co.bora5.plugins.babj.model.BABjField;
 import rs.co.bora5.plugins.babj.model.BABjNaming;
+import rs.co.bora5.plugins.babj.model.EntityModel;
 import rs.co.bora5.plugins.babj.model.GenerationContext;
 
 /**
@@ -28,6 +29,9 @@ public final class CodeTemplates {
     // -------------------------------------------------------------------- DTO
 
     public static String dto(GenerationContext ctx) {
+        if (ctx.isSettingsAdministration()) {
+            return settingsDto(ctx);
+        }
         String entity = ctx.getEntityName();
         Set<String> imports = new TreeSet<>();
         imports.add("java.io.Serial");
@@ -80,6 +84,9 @@ public final class CodeTemplates {
     // ------------------------------------------------------------------- Home
 
     public static String home(GenerationContext ctx) {
+        if (ctx.isSettingsAdministration()) {
+            return settingsHome(ctx);
+        }
         String entity = ctx.getEntityName();
         boolean hasJoins = ctx.getFields().stream().anyMatch(BABjField::isAssociation);
 
@@ -153,7 +160,9 @@ public final class CodeTemplates {
         imports.add("com.vaadin.flow.router.PageTitle");
         imports.add("com.vaadin.flow.router.Route");
         imports.add("com.vaadin.cdi.annotation.RouteScoped");
-        imports.add("rs.co.bora5.programs.bab.front.views.GenericView");
+        imports.add(ctx.isSettingsAdministration()
+                ? "rs.co.bora5.programs.bab.front.views.GenericSettingsView"
+                : "rs.co.bora5.programs.bab.front.views.GenericView");
         imports.add("rs.co.bora5.programs.bab.front.views.interfaceCheck.*");
         imports.add(ctx.getBasePackage() + ".front.MainView");
         imports.add(ctx.dtoPackage() + "." + entity + "DTO");
@@ -163,10 +172,18 @@ public final class CodeTemplates {
         if (!ctx.getRolesTypeFqn().isBlank()) {
             imports.add(ctx.getRolesTypeFqn());
         }
+        if (ctx.isGenerateCsvImport() || ctx.isGenerateXlsImport()) {
+            imports.add("jakarta.inject.Inject");
+            imports.add(ctx.windowPackage() + ".Import" + entity
+                    + (ctx.isGenerateCsvImport() ? "CsvWindow" : "XlsWindow"));
+        }
+        if (ctx.isEnableAttachments()) {
+            addAttachmentImports(ctx, imports);
+        }
         imports.add("java.io.Serial");
 
         StringBuilder cols = new StringBuilder();
-        for (BABjField f : ctx.getFields()) {
+        for (BABjField f : ctx.isSettingsAdministration() ? settingsFields() : ctx.getFields()) {
             if (!cols.isEmpty()) {
                 cols.append(',');
             }
@@ -184,6 +201,12 @@ public final class CodeTemplates {
         sb.append("@EnableNew\n@EnableEdit\n@EnableDelete\n");
         if (ctx.isEnableExport()) {
             sb.append("@EnableExport\n");
+        }
+        if (ctx.isGenerateCsvImport() || ctx.isGenerateXlsImport()) {
+            sb.append("@EnableImport\n");
+        }
+        if (ctx.isSettingsAdministration()) {
+            sb.append("@EnableCSSButton1(adminsOnly = true, alvaysOn = true)\n");
         }
         if (!ctx.getRoles().isEmpty()) {
             sb.append("@AdminTypes(roles = ");
@@ -205,10 +228,15 @@ public final class CodeTemplates {
         sb.append("@PageTitle(\"").append(ctx.getPageTitle()).append("\")\n");
         sb.append("@Route(value = \"").append(ctx.getRoute()).append("\", layout = MainView.class)\n");
         sb.append("@RouteScoped\n");
-        sb.append("public class ").append(ctx.getViewName()).append(" extends GenericView<")
+        sb.append("public class ").append(ctx.getViewName()).append(" extends ")
+                .append(ctx.isSettingsAdministration() ? "GenericSettingsView<" : "GenericView<")
                 .append(entity).append(", ").append(entity).append("Home, ")
-                .append(entity).append("DTO, ").append(ctx.getKType()).append("> {\n\n");
+                .append(entity).append("DTO, ").append(ctx.getKType()).append('>');
+        appendAttachmentInterface(ctx, sb);
+        sb.append(" {\n\n");
         serial(sb);
+        appendImportField(ctx, sb);
+        appendAttachmentMethod(ctx, sb);
         sb.append("}\n");
         return sb.toString();
     }
@@ -306,6 +334,179 @@ public final class CodeTemplates {
         return sb.toString();
     }
 
+    public static String messagingAgent(GenerationContext ctx) {
+        String entity = ctx.getEntityName();
+        Set<String> imports = new TreeSet<>();
+        imports.add("jakarta.enterprise.context.ApplicationScoped");
+        imports.add("rs.co.bora5.programs.bab.agent.AbstractAgent");
+        imports.add("rs.co.bora5.programs.bab.agent.events.AgentEvent");
+        imports.add("rs.co.bora5.programs.bab.agent.events.EntityEvent");
+        imports.add(ctx.modelPackage() + "." + entity);
+
+        StringBuilder sb = new StringBuilder();
+        header(sb, ctx.agentPackage(), imports);
+        sb.append("@ApplicationScoped\n")
+                .append("public class ").append(entity).append("MessagingAgent extends AbstractAgent {\n\n")
+                .append("\tpublic ").append(entity).append("MessagingAgent() {\n")
+                .append("\t\tsuper(\"").append(entity).append(" Messaging Agent\");\n\t}\n\n")
+                .append("\t@Override\n\tpublic boolean supports(AgentEvent event) {\n")
+                .append("\t\treturn event instanceof EntityEvent entityEvent\n")
+                .append("\t\t\t\t&& entityEvent.getEntity() instanceof ").append(entity).append(";\n")
+                .append("\t}\n\n")
+                .append("\t@Override\n\tpublic void handle(AgentEvent event) {\n")
+                .append("\t\tif (event instanceof EntityEvent entityEvent\n")
+                .append("\t\t\t\t&& entityEvent.getEntity() instanceof ").append(entity).append(" entity) {\n")
+                .append("\t\t\tgetContext().broadcast(getName(),\n")
+                .append("\t\t\t\t\tnew EntityLifecycleMessage(entityEvent.getType(), entity.getId()));\n")
+                .append("\t\t}\n\t}\n\n")
+                .append("\tpublic record EntityLifecycleMessage(String eventType, Long entityId) {\n\t}\n")
+                .append("}\n");
+        return sb.toString();
+    }
+
+    private static String settingsDto(GenerationContext ctx) {
+        String entity = ctx.getEntityName();
+        Set<String> imports = new TreeSet<>();
+        imports.add("java.io.Serial");
+        imports.add("rs.co.bora5.programs.bab.front.views.projections.AbstractSettingsDTO");
+        imports.add(ctx.modelPackage() + "." + entity);
+
+        StringBuilder sb = new StringBuilder();
+        header(sb, ctx.dtoPackage(), imports);
+        sb.append("public class ").append(entity).append("DTO extends AbstractSettingsDTO<")
+                .append(entity).append("> {\n\n");
+        serial(sb);
+        sb.append("\tpublic ").append(entity)
+                .append("DTO(Long id, String backupLocation, String filesAttachmentLocation, ")
+                .append("String pluginsLocation, boolean aktivan) {\n")
+                .append("\t\tsuper(id, backupLocation, filesAttachmentLocation, pluginsLocation, aktivan);\n")
+                .append("\t}\n}\n");
+        return sb.toString();
+    }
+
+    private static String settingsHome(GenerationContext ctx) {
+        String entity = ctx.getEntityName();
+        Set<String> imports = new TreeSet<>();
+        imports.add("java.io.Serial");
+        imports.add("jakarta.ejb.LocalBean");
+        imports.add("jakarta.ejb.Stateless");
+        imports.add("rs.co.bora5.programs.bab.session.AbstractSettingsHome");
+        imports.add("rs.co.bora5.programs.bab.utils.Primary");
+        imports.add(ctx.dtoPackage() + "." + entity + "DTO");
+        imports.add(ctx.modelPackage() + "." + entity);
+
+        StringBuilder sb = new StringBuilder();
+        header(sb, ctx.homePackage(), imports);
+        sb.append("@Stateless\n@LocalBean\n@Primary\n")
+                .append("public class ").append(entity).append("Home extends AbstractSettingsHome<")
+                .append(entity).append(", ").append(entity).append("DTO> {\n\n");
+        serial(sb);
+        sb.append("\tpublic ").append(entity).append("Home() {\n")
+                .append("\t\tsuper(").append(entity).append(".class, ").append(entity)
+                .append("DTO.class);\n\t}\n\n")
+                .append("\t@Override\n\tpublic String getSelect() {\n")
+                .append("\t\treturn super.getSelect() + \"(x.id, x.backupLocation, ")
+                .append("x.filesAttachmentLocation, x.pluginsLocation, x.aktivan)\";\n")
+                .append("\t}\n}\n");
+        return sb.toString();
+    }
+
+    private static String settingsWindow(GenerationContext ctx) {
+        String entity = ctx.getEntityName();
+        Set<String> imports = new TreeSet<>();
+        imports.add("java.io.Serial");
+        imports.add("jakarta.enterprise.context.Dependent");
+        imports.add("rs.co.bora5.programs.bab.front.windowses.GenericSettingsWindow");
+        imports.add("rs.co.bora5.programs.bab.utils.Primary");
+        imports.add(ctx.dtoPackage() + "." + entity + "DTO");
+        imports.add(ctx.homePackage() + "." + entity + "Home");
+        imports.add(ctx.modelPackage() + "." + entity);
+        imports.add(ctx.modelPackage() + "." + ctx.getKType());
+
+        StringBuilder sb = new StringBuilder();
+        header(sb, ctx.windowPackage(), imports);
+        sb.append("@Dependent\n@Primary\n")
+                .append("public class Edit").append(entity)
+                .append("Window extends GenericSettingsWindow<")
+                .append(entity).append(", ").append(entity).append("Home, ")
+                .append(entity).append("DTO, ").append(ctx.getKType()).append("> {\n\n");
+        serial(sb);
+        sb.append("}\n");
+        return sb.toString();
+    }
+
+    private static java.util.List<BABjField> settingsFields() {
+        return java.util.List.of(
+                new BABjField("backupLocation", BABjField.Kind.SIMPLE, "String", null, null),
+                new BABjField("filesAttachmentLocation", BABjField.Kind.SIMPLE, "String", null, null),
+                new BABjField("pluginsLocation", BABjField.Kind.SIMPLE, "String", null, null),
+                new BABjField("aktivan", BABjField.Kind.SIMPLE, "boolean", null, null));
+    }
+
+    private static void appendImportField(GenerationContext ctx, StringBuilder sb) {
+        if (!ctx.isGenerateCsvImport() && !ctx.isGenerateXlsImport()) {
+            return;
+        }
+        String entity = ctx.getEntityName();
+        sb.append("\t@Inject\n\t@ImportWindow\n\tprivate Import").append(entity)
+                .append(ctx.isGenerateCsvImport() ? "CsvWindow" : "XlsWindow")
+                .append(" importWindow;\n\n");
+    }
+
+    private static void addAttachmentImports(GenerationContext ctx, Set<String> imports) {
+        EntityModel.AttachmentSupport support = ctx.getAttachmentSupport();
+        imports.add("java.util.function.Consumer");
+        imports.add("com.vaadin.flow.component.orderedlayout.VerticalLayout");
+        imports.add(support.qualifiedName());
+        if (support.kind() == EntityModel.AttachmentKind.FILE_SYSTEM) {
+            imports.add("rs.co.bora5.programs.bab.front.views.interfaceCheck.MultiFileSystemAttachmentViewInterface");
+            imports.add("rs.co.bora5.programs.bab.utils.CustomMultiFileSystemInputField");
+        } else {
+            imports.add("rs.co.bora5.programs.bab.front.views.interfaceCheck.MultiAttachmentViewInterface");
+            imports.add("rs.co.bora5.programs.bab.utils.CustomMultiByteArrayInputField");
+        }
+    }
+
+    private static void appendAttachmentInterface(GenerationContext ctx, StringBuilder sb) {
+        if (!ctx.isEnableAttachments()) {
+            return;
+        }
+        EntityModel.AttachmentSupport support = ctx.getAttachmentSupport();
+        if (support.kind() == EntityModel.AttachmentKind.FILE_SYSTEM) {
+            sb.append(" implements MultiFileSystemAttachmentViewInterface<")
+                    .append(ctx.getEntityName()).append(", ").append(support.simpleName())
+                    .append(", ").append(ctx.getKType()).append('>');
+        } else {
+            sb.append(" implements MultiAttachmentViewInterface<")
+                    .append(ctx.getEntityName()).append(", ").append(support.simpleName()).append('>');
+        }
+    }
+
+    private static void appendAttachmentMethod(GenerationContext ctx, StringBuilder sb) {
+        if (!ctx.isEnableAttachments()) {
+            return;
+        }
+        String entity = ctx.getEntityName();
+        EntityModel.AttachmentSupport support = ctx.getAttachmentSupport();
+        sb.append("\t@Override\n\tpublic Consumer<VerticalLayout> generateComponents(")
+                .append(entity).append(" entity) {\n")
+                .append("\t\treturn layout -> {\n");
+        if (support.kind() == EntityModel.AttachmentKind.FILE_SYSTEM) {
+            sb.append("\t\t\tCustomMultiFileSystemInputField<").append(entity).append(", ")
+                    .append(support.simpleName()).append(", ").append(ctx.getKType())
+                    .append("> attachments = new CustomMultiFileSystemInputField<>(")
+                    .append(support.simpleName()).append(".class, entity);\n");
+        } else {
+            sb.append("\t\t\tCustomMultiByteArrayInputField<").append(entity).append(", ")
+                    .append(support.simpleName())
+                    .append("> attachments = new CustomMultiByteArrayInputField<>(")
+                    .append(support.simpleName()).append(".class, entity);\n");
+        }
+        sb.append("\t\t\tattachments.setValue(entity.getAttachments());\n")
+                .append("\t\t\tlayout.add(attachments);\n")
+                .append("\t\t};\n\t}\n\n");
+    }
+
     private static Set<String> moduleImports(GenerationContext ctx) {
         String entity = ctx.getEntityName();
         Set<String> imports = new TreeSet<>();
@@ -319,6 +520,9 @@ public final class CodeTemplates {
     // ----------------------------------------------------------------- Window
 
     public static String window(GenerationContext ctx) {
+        if (ctx.isSettingsAdministration()) {
+            return settingsWindow(ctx);
+        }
         String entity = ctx.getEntityName();
 
         Set<String> imports = new TreeSet<>();

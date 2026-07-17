@@ -9,6 +9,8 @@ version = providers.gradleProperty("version").get()
 // Repositories are declared once, at the settings level (settings.gradle.kts).
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
+
     intellijPlatform {
         // Build against Community 2024.3 (a stable release that resolves and runs on JDK 21). The
         // plugin uses only stable core + Java PSI APIs, so — with no untilBuild cap — it loads on

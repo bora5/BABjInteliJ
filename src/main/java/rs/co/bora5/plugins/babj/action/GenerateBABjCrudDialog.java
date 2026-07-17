@@ -68,6 +68,10 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
     private final JBCheckBox csvCheck = new JBCheckBox("CSV import window", false);
     private final JBCheckBox xlsCheck = new JBCheckBox("Excel import window", false);
     private final JBCheckBox reportCheck = new JBCheckBox("Report window", false);
+    private final JBCheckBox attachmentsCheck = new JBCheckBox("Attachment row action", false);
+    private final JBCheckBox messagingCheck = new JBCheckBox("Entity messaging agent", false);
+    private final JBCheckBox administrationCheck =
+            new JBCheckBox("BABj settings administration specialization", false);
 
     public GenerateBABjCrudDialog(@Nullable Project project, EntityModel model) {
         super(project);
@@ -95,10 +99,33 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
         titleField = new JBTextField(BABjNaming.label(entity));
         restPathField = new JBTextField("/" + BABjNaming.decapitalize(entity));
         fieldDesigner = new CrudFieldDesignerPanel(model.getFields());
+        csvCheck.addActionListener(event -> {
+            if (csvCheck.isSelected()) {
+                xlsCheck.setSelected(false);
+            }
+        });
+        xlsCheck.addActionListener(event -> {
+            if (xlsCheck.isSelected()) {
+                csvCheck.setSelected(false);
+            }
+        });
         restCheck.setEnabled(model.isRestPublicIdCapable());
         if (!model.isRestPublicIdCapable()) {
             restCheck.setToolTipText(
                     "The entity must implement RestPublicIdEntityInterface to generate an endpoint.");
+        }
+        EntityModel.AttachmentSupport attachment = model.getAttachmentSupport();
+        attachmentsCheck.setEnabled(attachment.isAvailable());
+        attachmentsCheck.setText(attachment.isAvailable()
+                ? "Attachment row action (" + attachment.simpleName() + ")"
+                : "Attachment row action (compatible parent interface not found)");
+        attachmentsCheck.setToolTipText(attachment.isAvailable()
+                ? "Adds the matching BABj attachment View interface and typed upload components."
+                : "The entity must implement MultiAttachmentEntityInterface or MultiFileSystemAttachmentEntityInterface.");
+        administrationCheck.setEnabled(model.isSettingsCapable());
+        if (!model.isSettingsCapable()) {
+            administrationCheck.setToolTipText(
+                    "The entity must extend AbstractSettings for settings administration specialization.");
         }
 
         setTitle("BABj CRUD generator — " + entity);
@@ -128,9 +155,14 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
                 .addComponent(csvCheck)
                 .addComponent(xlsCheck)
                 .addComponent(reportCheck)
+                .addComponent(attachmentsCheck)
+                .addComponent(messagingCheck)
+                .addComponent(administrationCheck)
                 .getPanel();
         JBTabbedPane tabs = new JBTabbedPane();
-        tabs.addTab("Artifacts", settings);
+        JBScrollPane settingsScroll = new JBScrollPane(settings);
+        settingsScroll.setBorder(null);
+        tabs.addTab("Artifacts", settingsScroll);
         tabs.addTab("CRUD Designer", fieldDesigner);
         return tabs;
     }
@@ -166,7 +198,8 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
         if (!dtoCheck.isSelected() && !homeCheck.isSelected()
                 && !viewCheck.isSelected() && !windowCheck.isSelected()
                 && !restCheck.isSelected() && !csvCheck.isSelected()
-                && !xlsCheck.isSelected() && !reportCheck.isSelected()) {
+                && !xlsCheck.isSelected() && !reportCheck.isSelected()
+                && !messagingCheck.isSelected()) {
             return new ValidationInfo("Select at least one artifact to generate.", dtoCheck);
         }
         if (restCheck.isSelected() && !model.isRestPublicIdCapable()) {
@@ -193,6 +226,30 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
                         restCheck);
             }
         }
+        if (attachmentsCheck.isSelected() && !model.getAttachmentSupport().isAvailable()) {
+            return new ValidationInfo(
+                    "Attachment support requires a compatible BABj parent entity interface.",
+                    attachmentsCheck);
+        }
+        if (attachmentsCheck.isSelected() && !viewCheck.isSelected()) {
+            return new ValidationInfo(
+                    "Generate the View together with its attachment integration.", viewCheck);
+        }
+        if (attachmentsCheck.isSelected() && project != null) {
+            String viewFqn = basePackageField.getText().trim() + ".front.views."
+                    + viewNameField.getText().trim();
+            if (JavaPsiFacade.getInstance(project)
+                    .findClass(viewFqn, GlobalSearchScope.projectScope(project)) != null) {
+                return new ValidationInfo(
+                        "The target View already exists and is never overwritten; choose a new View name or add attachment support manually.",
+                        viewNameField);
+            }
+        }
+        if (administrationCheck.isSelected() && !model.isSettingsCapable()) {
+            return new ValidationInfo(
+                    "Settings administration specialization requires AbstractSettings.",
+                    administrationCheck);
+        }
         return null;
     }
 
@@ -217,7 +274,11 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
                 restPathField.getText().trim(),
                 csvCheck.isSelected(),
                 xlsCheck.isSelected(),
-                reportCheck.isSelected());
+                reportCheck.isSelected(),
+                attachmentsCheck.isSelected(),
+                model.getAttachmentSupport(),
+                messagingCheck.isSelected(),
+                administrationCheck.isSelected());
     }
 
     private void refreshRoles() {

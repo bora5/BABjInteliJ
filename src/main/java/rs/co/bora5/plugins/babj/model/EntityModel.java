@@ -5,13 +5,17 @@ import java.util.List;
 
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiField;
+import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiPrimitiveType;
+import com.intellij.psi.PsiSubstitutor;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.util.PsiUtil;
 import com.intellij.psi.util.InheritanceUtil;
+import com.intellij.psi.util.TypeConversionUtil;
+import com.intellij.psi.search.GlobalSearchScope;
 
 /**
  * Parses a JPA entity {@link PsiClass} into the metadata the generator needs: its name, package and
@@ -31,18 +35,28 @@ public final class EntityModel {
     private static final String ABSTRACT_ENTITY = "rs.co.bora5.programs.bab.model.AbstractEntity";
     private static final String REST_PUBLIC_ID =
             "rs.co.bora5.programs.bab.model.interfaceCheck.RestPublicIdEntityInterface";
+    private static final String ABSTRACT_SETTINGS = "rs.co.bora5.programs.bab.model.AbstractSettings";
+    private static final String DATABASE_ATTACHMENTS =
+            "rs.co.bora5.programs.bab.model.interfaceCheck.MultiAttachmentEntityInterface";
+    private static final String FILE_ATTACHMENTS =
+            "rs.co.bora5.programs.bab.model.interfaceCheck.MultiFileSystemAttachmentEntityInterface";
 
     private final String simpleName;
     private final String packageName;
     private final List<BABjField> fields;
     private final boolean restPublicIdCapable;
+    private final boolean settingsCapable;
+    private final AttachmentSupport attachmentSupport;
 
     private EntityModel(String simpleName, String packageName, List<BABjField> fields,
-                        boolean restPublicIdCapable) {
+                        boolean restPublicIdCapable, boolean settingsCapable,
+                        AttachmentSupport attachmentSupport) {
         this.simpleName = simpleName;
         this.packageName = packageName;
         this.fields = fields;
         this.restPublicIdCapable = restPublicIdCapable;
+        this.settingsCapable = settingsCapable;
+        this.attachmentSupport = attachmentSupport;
     }
 
     public String getSimpleName() {
@@ -59,6 +73,14 @@ public final class EntityModel {
 
     public boolean isRestPublicIdCapable() {
         return restPublicIdCapable;
+    }
+
+    public boolean isSettingsCapable() {
+        return settingsCapable;
+    }
+
+    public AttachmentSupport getAttachmentSupport() {
+        return attachmentSupport;
     }
 
     /** Whether the class looks like a BABj entity: a JPA {@code @Entity} or an {@code AbstractEntity}. */
@@ -112,7 +134,58 @@ public final class EntityModel {
         }
 
         return new EntityModel(psiClass.getName(), pkg, fields,
-                InheritanceUtil.isInheritor(psiClass, REST_PUBLIC_ID));
+                InheritanceUtil.isInheritor(psiClass, REST_PUBLIC_ID),
+                InheritanceUtil.isInheritor(psiClass, ABSTRACT_SETTINGS),
+                resolveAttachmentSupport(psiClass));
+    }
+
+    private static AttachmentSupport resolveAttachmentSupport(PsiClass entity) {
+        AttachmentSupport fileSystem = resolveAttachmentSupport(
+                entity, FILE_ATTACHMENTS, AttachmentKind.FILE_SYSTEM);
+        if (fileSystem.isAvailable()) {
+            return fileSystem;
+        }
+        return resolveAttachmentSupport(entity, DATABASE_ATTACHMENTS, AttachmentKind.DATABASE);
+    }
+
+    private static AttachmentSupport resolveAttachmentSupport(PsiClass entity, String interfaceFqn,
+                                                              AttachmentKind kind) {
+        PsiClass contract = JavaPsiFacade.getInstance(entity.getProject())
+                .findClass(interfaceFqn, GlobalSearchScope.allScope(entity.getProject()));
+        if (contract == null || contract.getTypeParameters().length < 2
+                || !InheritanceUtil.isInheritor(entity, interfaceFqn)) {
+            return AttachmentSupport.none();
+        }
+        PsiSubstitutor substitutor = TypeConversionUtil.getSuperClassSubstitutor(
+                contract, entity, PsiSubstitutor.EMPTY);
+        PsiType attachmentType = substitutor.substitute(contract.getTypeParameters()[1]);
+        if (attachmentType == null) {
+            return AttachmentSupport.none();
+        }
+        PsiClass attachmentClass = PsiUtil.resolveClassInClassTypeOnly(attachmentType);
+        if (attachmentClass == null || attachmentClass.getName() == null
+                || attachmentClass.getQualifiedName() == null
+                || !InheritanceUtil.isInheritor(attachmentClass, ABSTRACT_ENTITY)) {
+            return AttachmentSupport.none();
+        }
+        return new AttachmentSupport(kind, attachmentClass.getName(),
+                attachmentClass.getQualifiedName());
+    }
+
+    public enum AttachmentKind {
+        NONE,
+        DATABASE,
+        FILE_SYSTEM
+    }
+
+    public record AttachmentSupport(AttachmentKind kind, String simpleName, String qualifiedName) {
+        public static AttachmentSupport none() {
+            return new AttachmentSupport(AttachmentKind.NONE, "", "");
+        }
+
+        public boolean isAvailable() {
+            return kind != AttachmentKind.NONE && !qualifiedName.isBlank();
+        }
     }
 
     /**

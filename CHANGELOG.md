@@ -4,6 +4,19 @@
 
 ## [Unreleased]
 
+### Added — complete module support
+
+- Import scaffolds are now wired into newly generated Views through `@EnableImport` and
+  `@ImportWindow`; CSV and Excel are mutually exclusive because BABj exposes one import action.
+- Added typed database and file-system attachment View integration for entities implementing the
+  matching BABj parent interfaces.
+- Added an entity messaging-agent generator that converts matching `EntityEvent` instances into
+  BABj agent broadcasts.
+- Added administration specialization for `AbstractSettings` entities using
+  `AbstractSettingsDTO/Home`, `GenericSettingsView`, and `GenericSettingsWindow`.
+- Added a complete manual test matrix in `docs/TESTING.md` and raised the plugin version to
+  **1.3.0**.
+
 ### Added — extended BABj tooling
 
 - Added a visual CRUD Designer with field selection, ordering, Vaadin editor overrides, and live

@@ -70,6 +70,12 @@ public final class BABjGenerator {
                     CodeTemplates.report(ctx), created, skipped);
             toOpen = firstNonNull(toOpen, f);
         }
+        if (ctx.isGenerateMessagingAgent()) {
+            PsiFile f = write(project, sourceRoot, ctx.agentPackage(),
+                    entity + "MessagingAgent.java",
+                    CodeTemplates.messagingAgent(ctx), created, skipped);
+            toOpen = firstNonNull(toOpen, f);
+        }
 
         return new Result(created, skipped, toOpen);
     }

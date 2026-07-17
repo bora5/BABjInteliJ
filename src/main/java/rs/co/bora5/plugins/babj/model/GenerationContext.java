@@ -30,6 +30,10 @@ public final class GenerationContext {
     private final boolean generateCsvImport;
     private final boolean generateXlsImport;
     private final boolean generateReport;
+    private final boolean enableAttachments;
+    private final EntityModel.AttachmentSupport attachmentSupport;
+    private final boolean generateMessagingAgent;
+    private final boolean settingsAdministration;
 
     public GenerationContext(String basePackage, String entityName, String kType,
                              String rolesType, String rolesTypeFqn, List<String> roles,
@@ -37,7 +41,9 @@ public final class GenerationContext {
                              boolean generateDto, boolean generateHome, boolean generateView,
                              boolean generateWindow, boolean enableExport, boolean generateRest,
                              String restPath, boolean generateCsvImport, boolean generateXlsImport,
-                             boolean generateReport) {
+                             boolean generateReport, boolean enableAttachments,
+                             EntityModel.AttachmentSupport attachmentSupport,
+                             boolean generateMessagingAgent, boolean settingsAdministration) {
         this.basePackage = basePackage;
         this.entityName = entityName;
         this.kType = kType;
@@ -58,6 +64,10 @@ public final class GenerationContext {
         this.generateCsvImport = generateCsvImport;
         this.generateXlsImport = generateXlsImport;
         this.generateReport = generateReport;
+        this.enableAttachments = enableAttachments;
+        this.attachmentSupport = attachmentSupport;
+        this.generateMessagingAgent = generateMessagingAgent;
+        this.settingsAdministration = settingsAdministration;
     }
 
     public String getBasePackage() {
@@ -140,6 +150,22 @@ public final class GenerationContext {
         return generateReport;
     }
 
+    public boolean isEnableAttachments() {
+        return enableAttachments;
+    }
+
+    public EntityModel.AttachmentSupport getAttachmentSupport() {
+        return attachmentSupport;
+    }
+
+    public boolean isGenerateMessagingAgent() {
+        return generateMessagingAgent;
+    }
+
+    public boolean isSettingsAdministration() {
+        return settingsAdministration;
+    }
+
     // Package helpers -------------------------------------------------------
 
     public String dtoPackage() {
@@ -164,5 +190,9 @@ public final class GenerationContext {
 
     public String restPackage() {
         return basePackage + ".sesion.rest";
+    }
+
+    public String agentPackage() {
+        return basePackage + ".agent";
     }
 }

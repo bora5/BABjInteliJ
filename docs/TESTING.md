@@ -1,0 +1,240 @@
+# BABj IntelliJ Plugin — Manual Test Matrix
+
+This guide covers every plugin feature. Use a disposable branch of a BABj application because the
+generator creates real Java source files. It never overwrites an existing file.
+
+## 1. Install the development build
+
+Build the plugin:
+
+```powershell
+.\gradlew.bat buildPlugin
+```
+
+Install `build/distributions/BABjInteliJ-1.3.0.zip` through:
+
+`Settings → Plugins → ⚙ → Install Plugin from Disk`
+
+Restart the IDE when replacing an older plugin build. Alternatively, run `.\gradlew.bat runIde` to
+open an isolated IntelliJ sandbox.
+
+Make sure BAB is a project dependency and wait for indexing to finish. Enable all inspections under
+`Settings → Editor → Inspections → Java → BABj`.
+
+## 2. Features already smoke-tested
+
+These are the checks already confirmed in WasteX and only need repeating after a regression:
+
+- `Alt+Insert → BABj Code Generator` is available in an entity.
+- The CRUD quartet is generated.
+- completion works in BABj annotation strings.
+- `getSelect()` and `@ColumnNames` validation works.
+- gutter navigation opens the related Entity, DTO, Home, View, and EditWindow.
+
+## 3. CRUD Designer
+
+1. Open a JPA entity with at least a `String`, number, boolean, date, enum, and `@ManyToOne` field.
+2. Run `Alt+Insert → BABj Code Generator` and open **CRUD Designer**.
+3. Clear one field, move another field to the top, and override one editor type.
+4. Confirm that **Grid projection** and **Edit form** previews update immediately.
+5. Generate into new class names/packages.
+
+Expected:
+
+- the cleared field is absent from DTO, Home projection, View columns, and EditWindow;
+- the reordered field order is identical in DTO constructor, `getSelect()`, and `@ColumnNames`;
+- the selected editor is used in the generated EditWindow;
+- associations still produce a join and typed combo box.
+
+## 4. Operator and role discovery
+
+1. Ensure the project has two concrete `OperaterEntityInterface` implementations.
+2. Ensure a concrete `AbstractRoles` subclass inherits constants and declares local
+   `public static final String` constants.
+3. Open the generator.
+
+Expected:
+
+- both operator types are offered and the field remains editable;
+- inherited and local role constants are listed;
+- multiple selected roles produce an `@AdminTypes(roles = {...})` array;
+- no `ADMIN` or `Roles` class name is hard-coded.
+
+## 5. No-overwrite guarantee
+
+1. Generate any artifact.
+2. Add a recognizable comment to it.
+3. Run the same generation again.
+
+Expected: the result dialog lists the file under **Skipped (already exists)** and the comment remains
+unchanged.
+
+## 6. REST endpoint
+
+Positive case:
+
+1. Use an entity implementing `RestPublicIdEntityInterface`.
+2. Select DTO, Home, and **REST endpoint**; enter a path such as `/test-items`.
+3. Generate.
+
+Expected:
+
+- `<Entity>Endpoint` extends `AbstractEndpoint<Entity, EntityHome, EntityDTO, Operator>`;
+- it has the selected `@Path`;
+- the generated Home implements `RestPublicIdHomeInterface<Entity>`;
+- generated sources compile in the application.
+
+Negative case: use an ordinary entity. The REST checkbox must be disabled. If a pre-existing Home
+does not implement the REST Home contract, validation must explain the required change instead of
+generating a broken endpoint.
+
+## 7. Import and export
+
+1. Generate a new View together with either **CSV import window** or **Excel import window**.
+2. Confirm that selecting CSV clears Excel and vice versa.
+3. Also select **Enable View export**.
+
+Expected:
+
+- the View has `@EnableImport` and `@EnableExport`;
+- it contains one injected field annotated with `@ImportWindow`;
+- CSV generates `Import<Entity>CsvWindow`; Excel generates `Import<Entity>XlsWindow`;
+- the import class extends the matching BABj upload base class and exposes a clear `doWork(...)`
+  business hook.
+
+Runtime check: implement the generated `doWork(...)` TODO, start the application, and confirm that
+the View toolbar opens exactly one import dialog. Import a small file and verify persistence. The
+Export button should download the visible grid data.
+
+## 8. Report scaffold
+
+1. Select **Report window** and generate.
+2. Compile the application.
+
+Expected: `<Entity>ReportWindow` extends `GenericReportWindow<Entity, Operator>`, calls
+`super(Entity.class)`, and contains `createContent(...)` and `doMain()` hooks. Add one bound report
+parameter and a minimal `doMain()` implementation, then open the window from the application and
+verify the BABj validation/lifecycle flow.
+
+## 9. Attachments
+
+Prepare an entity that already implements either:
+
+- `MultiAttachmentEntityInterface<Parent, Attachment>`, or
+- `MultiFileSystemAttachmentEntityInterface<Parent, Attachment, Operator>`.
+
+The attachment type must be an `AbstractEntity` implementing the matching attachment interface.
+
+1. Open the parent entity and run the generator.
+2. Confirm that **Attachment row action** displays the resolved attachment type.
+3. Generate a new View with this option enabled.
+
+Expected:
+
+- incompatible entities have the option disabled;
+- the View implements the correct database/file-system BABj View interface;
+- `generateComponents(...)` contains the correctly typed BABj multi-file input;
+- compilation succeeds without raw generic types.
+
+Runtime check: log in with one of the View's admin roles, select a row, and open
+**Pregled priloga**. Upload and download a small file. For file-system attachments also verify that
+the file is written below the active settings `filesAttachmentLocation`.
+
+## 10. Entity messaging agent
+
+1. Select **Entity messaging agent** for an entity and generate.
+2. Open **View → Tool Windows → BABj Agent Studio** and press **Scan project**.
+3. Select `EntityEvent` and press **Simulate event**.
+
+Expected:
+
+- `<Entity>MessagingAgent` is an `@ApplicationScoped` `AbstractAgent`;
+- Agent Studio shows it as reacting to `EntityEvent`;
+- the generated handler broadcasts an `EntityLifecycleMessage` containing event type and entity id.
+
+Runtime check: register a small receiver agent supporting `AgentMessageEvent`, fire
+`new EntityEvent("UPDATE", entity)` through `AgentContext`/the runtime manager, and verify that the
+receiver gets the broadcast. The generated agent intentionally does not send e-mail/SMS directly;
+receivers decide how the message is delivered.
+
+## 11. Settings administration specialization
+
+1. Use a concrete entity extending `AbstractSettings`.
+2. Select DTO, Home, View, Window, and **BABj settings administration specialization**.
+3. Generate and compile.
+
+Expected:
+
+- DTO extends `AbstractSettingsDTO`;
+- Home extends `AbstractSettingsHome` and projects all four settings fields;
+- View extends `GenericSettingsView` and enables its admin-only backup button;
+- Window extends `GenericSettingsWindow`;
+- the option is disabled for ordinary entities.
+
+Runtime check: open the generated View as an administrator, create an active settings row, edit the
+three locations, and verify that the backup button becomes available and invokes BABj backup logic.
+
+## 12. Agent Studio topology
+
+Create or use agents that reference concrete `AgentEvent`, `SafetyCriterion`, and `AgentAction`
+types. Open **BABj Agent Studio** and scan.
+
+Expected:
+
+- every concrete project Agent is a root child;
+- Events, Safety criteria, and Actions are grouped below it;
+- selecting an event marks matching agents with `✓ reacts`;
+- double-clicking any source-backed node opens its Java class;
+- during indexing the tool window shows a clear "available after indexing" status.
+
+This is a static simulation. It never instantiates agents or executes application code.
+
+## 13. Remaining inspections and quick fixes
+
+### Missing EditWindow
+
+Create a `GenericView` without `Edit<Entity>Window`. Expected: `BABjMissingEditWindow` reports it;
+`Alt+Enter → Generate Edit<Entity>Window` creates the missing file.
+
+### Annotation property references
+
+Insert a nonexistent property into annotations such as `@AddCondition`, `@EnabledForStatus`,
+`@AdminVisibleFields`, `@SqlFieldName`, `@PropertyId`, or `@SingleUniqueField`. Expected: the
+property is highlighted and completion offers valid entity paths.
+
+### Home aliases
+
+In `getSelect()`, reference an unknown alias or an invalid joined property. In `getJoin()`, add a
+valid chained join and use it from `getSelect()`. Expected: invalid references are reported while
+valid chained aliases are accepted.
+
+## 14. Live templates
+
+In a Java class, type each abbreviation and press `Tab`:
+
+- `bdto`
+- `bhome`
+- `bview`
+- `bwin`
+
+Expected: the matching BABj class skeleton is inserted and template variables are editable.
+
+## 15. Navigator tool window and action contexts
+
+1. Open **View → Tool Windows → BABj Navigator** from each member of a quartet.
+2. Press **Refresh from editor** and double-click every found artifact.
+3. Open Find Action and the editor context menu, not only `Alt+Insert`.
+
+Expected: the module graph shows found and missing artifacts, navigation opens source, and the code
+generator remains available in all supported action contexts while a Java editor is active.
+
+## 16. Release verification
+
+Before publishing a plugin build, run:
+
+```powershell
+.\gradlew.bat clean test buildPlugin verifyPlugin
+```
+
+Expected: compilation and packaging succeed and Plugin Verifier reports compatibility for all
+configured IntelliJ versions. The known `untilBuild = 299.*` structure warning is non-fatal.
