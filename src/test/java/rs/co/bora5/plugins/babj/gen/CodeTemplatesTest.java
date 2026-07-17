@@ -15,7 +15,7 @@ public class CodeTemplatesTest {
 
     @Test
     public void wiresCsvImportIntoView() {
-        GenerationContext context = context(false, true, false,
+        GenerationContext context = context(true, false,
                 EntityModel.AttachmentSupport.none(), false);
 
         String source = CodeTemplates.view(context);
@@ -30,7 +30,7 @@ public class CodeTemplatesTest {
         EntityModel.AttachmentSupport support = new EntityModel.AttachmentSupport(
                 EntityModel.AttachmentKind.FILE_SYSTEM, "OrderAttachment",
                 "example.model.OrderAttachment");
-        GenerationContext context = context(false, false, true, support, false);
+        GenerationContext context = context(false, true, support, false);
 
         String source = CodeTemplates.view(context);
 
@@ -41,20 +41,8 @@ public class CodeTemplatesTest {
     }
 
     @Test
-    public void generatesSettingsAdministrationQuartet() {
-        GenerationContext context = context(true, false, false,
-                EntityModel.AttachmentSupport.none(), false);
-
-        assertTrue(CodeTemplates.dto(context).contains("extends AbstractSettingsDTO<SystemSettings>"));
-        assertTrue(CodeTemplates.home(context).contains(
-                "extends AbstractSettingsHome<SystemSettings, SystemSettingsDTO>"));
-        assertTrue(CodeTemplates.view(context).contains("extends GenericSettingsView<"));
-        assertTrue(CodeTemplates.window(context).contains("extends GenericSettingsWindow<"));
-    }
-
-    @Test
     public void messagingAgentFiltersAndBroadcastsEntityEvents() {
-        GenerationContext context = context(false, false, false,
+        GenerationContext context = context(false, false,
                 EntityModel.AttachmentSupport.none(), true);
 
         String source = CodeTemplates.messagingAgent(context);
@@ -71,7 +59,7 @@ public class CodeTemplatesTest {
                         "example.model.Customer", "username"),
                 new BABjField("status", BABjField.Kind.ENUM, "OrderStatus",
                         "example.model.OrderStatus", null));
-        GenerationContext context = context(false, false, false,
+        GenerationContext context = context(false, false,
                 EntityModel.AttachmentSupport.none(), false, fields);
 
         String dto = CodeTemplates.dto(context);
@@ -95,22 +83,22 @@ public class CodeTemplatesTest {
         assertTrue(window.contains("cbStatus.setItems(OrderStatus.values());"));
     }
 
-    private static GenerationContext context(boolean settings, boolean csv, boolean attachments,
+    private static GenerationContext context(boolean csv, boolean attachments,
                                              EntityModel.AttachmentSupport attachmentSupport,
                                              boolean messaging) {
-        return context(settings, csv, attachments, attachmentSupport, messaging,
+        return context(csv, attachments, attachmentSupport, messaging,
                 List.of(new BABjField("name", BABjField.Kind.SIMPLE, "String", null, null)));
     }
 
-    private static GenerationContext context(boolean settings, boolean csv, boolean attachments,
+    private static GenerationContext context(boolean csv, boolean attachments,
                                              EntityModel.AttachmentSupport attachmentSupport,
                                              boolean messaging, List<BABjField> fields) {
-        String entity = settings ? "SystemSettings" : "Order";
+        String entity = "Order";
         return new GenerationContext(
                 "example", entity, "User", "Roles", "example.utils.Roles", List.of("ADMIN"),
                 entity + "View", entity.toLowerCase(), entity,
                 fields,
                 true, true, true, true, true, false, "", csv, false, false,
-                attachments, attachmentSupport, messaging, settings);
+                attachments, attachmentSupport, messaging, false);
     }
 }

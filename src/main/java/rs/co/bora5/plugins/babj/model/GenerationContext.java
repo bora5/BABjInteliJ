@@ -33,7 +33,7 @@ public final class GenerationContext {
     private final boolean enableAttachments;
     private final EntityModel.AttachmentSupport attachmentSupport;
     private final boolean generateMessagingAgent;
-    private final boolean settingsAdministration;
+    private final boolean overwriteExisting;
 
     public GenerationContext(String basePackage, String entityName, String kType,
                              String rolesType, String rolesTypeFqn, List<String> roles,
@@ -43,7 +43,7 @@ public final class GenerationContext {
                              String restPath, boolean generateCsvImport, boolean generateXlsImport,
                              boolean generateReport, boolean enableAttachments,
                              EntityModel.AttachmentSupport attachmentSupport,
-                             boolean generateMessagingAgent, boolean settingsAdministration) {
+                             boolean generateMessagingAgent, boolean overwriteExisting) {
         this.basePackage = basePackage;
         this.entityName = entityName;
         this.kType = kType;
@@ -67,7 +67,7 @@ public final class GenerationContext {
         this.enableAttachments = enableAttachments;
         this.attachmentSupport = attachmentSupport;
         this.generateMessagingAgent = generateMessagingAgent;
-        this.settingsAdministration = settingsAdministration;
+        this.overwriteExisting = overwriteExisting;
     }
 
     public String getBasePackage() {
@@ -162,8 +162,8 @@ public final class GenerationContext {
         return generateMessagingAgent;
     }
 
-    public boolean isSettingsAdministration() {
-        return settingsAdministration;
+    public boolean isOverwriteExisting() {
+        return overwriteExisting;
     }
 
     // Package helpers -------------------------------------------------------

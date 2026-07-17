@@ -35,7 +35,6 @@ public final class EntityModel {
     private static final String ABSTRACT_ENTITY = "rs.co.bora5.programs.bab.model.AbstractEntity";
     private static final String REST_PUBLIC_ID =
             "rs.co.bora5.programs.bab.model.interfaceCheck.RestPublicIdEntityInterface";
-    private static final String ABSTRACT_SETTINGS = "rs.co.bora5.programs.bab.model.AbstractSettings";
     private static final String DATABASE_ATTACHMENTS =
             "rs.co.bora5.programs.bab.model.interfaceCheck.MultiAttachmentEntityInterface";
     private static final String FILE_ATTACHMENTS =
@@ -45,17 +44,15 @@ public final class EntityModel {
     private final String packageName;
     private final List<BABjField> fields;
     private final boolean restPublicIdCapable;
-    private final boolean settingsCapable;
     private final AttachmentSupport attachmentSupport;
 
     private EntityModel(String simpleName, String packageName, List<BABjField> fields,
-                        boolean restPublicIdCapable, boolean settingsCapable,
+                        boolean restPublicIdCapable,
                         AttachmentSupport attachmentSupport) {
         this.simpleName = simpleName;
         this.packageName = packageName;
         this.fields = fields;
         this.restPublicIdCapable = restPublicIdCapable;
-        this.settingsCapable = settingsCapable;
         this.attachmentSupport = attachmentSupport;
     }
 
@@ -73,10 +70,6 @@ public final class EntityModel {
 
     public boolean isRestPublicIdCapable() {
         return restPublicIdCapable;
-    }
-
-    public boolean isSettingsCapable() {
-        return settingsCapable;
     }
 
     public AttachmentSupport getAttachmentSupport() {
@@ -135,7 +128,6 @@ public final class EntityModel {
 
         return new EntityModel(psiClass.getName(), pkg, fields,
                 InheritanceUtil.isInheritor(psiClass, REST_PUBLIC_ID),
-                InheritanceUtil.isInheritor(psiClass, ABSTRACT_SETTINGS),
                 resolveAttachmentSupport(psiClass));
     }
 

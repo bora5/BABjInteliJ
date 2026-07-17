@@ -29,9 +29,6 @@ public final class CodeTemplates {
     // -------------------------------------------------------------------- DTO
 
     public static String dto(GenerationContext ctx) {
-        if (ctx.isSettingsAdministration()) {
-            return settingsDto(ctx);
-        }
         String entity = ctx.getEntityName();
         Set<String> imports = new TreeSet<>();
         imports.add("java.io.Serial");
@@ -84,9 +81,6 @@ public final class CodeTemplates {
     // ------------------------------------------------------------------- Home
 
     public static String home(GenerationContext ctx) {
-        if (ctx.isSettingsAdministration()) {
-            return settingsHome(ctx);
-        }
         String entity = ctx.getEntityName();
         boolean hasJoins = ctx.getFields().stream().anyMatch(BABjField::isAssociation);
 
@@ -160,9 +154,7 @@ public final class CodeTemplates {
         imports.add("com.vaadin.flow.router.PageTitle");
         imports.add("com.vaadin.flow.router.Route");
         imports.add("com.vaadin.cdi.annotation.RouteScoped");
-        imports.add(ctx.isSettingsAdministration()
-                ? "rs.co.bora5.programs.bab.front.views.GenericSettingsView"
-                : "rs.co.bora5.programs.bab.front.views.GenericView");
+        imports.add("rs.co.bora5.programs.bab.front.views.GenericView");
         imports.add("rs.co.bora5.programs.bab.front.views.interfaceCheck.*");
         imports.add(ctx.getBasePackage() + ".front.MainView");
         imports.add(ctx.dtoPackage() + "." + entity + "DTO");
@@ -183,7 +175,7 @@ public final class CodeTemplates {
         imports.add("java.io.Serial");
 
         StringBuilder cols = new StringBuilder();
-        for (BABjField f : ctx.isSettingsAdministration() ? settingsFields() : ctx.getFields()) {
+        for (BABjField f : ctx.getFields()) {
             if (!cols.isEmpty()) {
                 cols.append(',');
             }
@@ -204,9 +196,6 @@ public final class CodeTemplates {
         }
         if (ctx.isGenerateCsvImport() || ctx.isGenerateXlsImport()) {
             sb.append("@EnableImport\n");
-        }
-        if (ctx.isSettingsAdministration()) {
-            sb.append("@EnableCSSButton1(adminsOnly = true, alvaysOn = true)\n");
         }
         if (!ctx.getRoles().isEmpty()) {
             sb.append("@AdminTypes(roles = ");
@@ -229,7 +218,7 @@ public final class CodeTemplates {
         sb.append("@Route(value = \"").append(ctx.getRoute()).append("\", layout = MainView.class)\n");
         sb.append("@RouteScoped\n");
         sb.append("public class ").append(ctx.getViewName()).append(" extends ")
-                .append(ctx.isSettingsAdministration() ? "GenericSettingsView<" : "GenericView<")
+                .append("GenericView<")
                 .append(entity).append(", ").append(entity).append("Home, ")
                 .append(entity).append("DTO, ").append(ctx.getKType()).append('>');
         appendAttachmentInterface(ctx, sb);
@@ -364,85 +353,6 @@ public final class CodeTemplates {
         return sb.toString();
     }
 
-    private static String settingsDto(GenerationContext ctx) {
-        String entity = ctx.getEntityName();
-        Set<String> imports = new TreeSet<>();
-        imports.add("java.io.Serial");
-        imports.add("rs.co.bora5.programs.bab.front.views.projections.AbstractSettingsDTO");
-        imports.add(ctx.modelPackage() + "." + entity);
-
-        StringBuilder sb = new StringBuilder();
-        header(sb, ctx.dtoPackage(), imports);
-        sb.append("public class ").append(entity).append("DTO extends AbstractSettingsDTO<")
-                .append(entity).append("> {\n\n");
-        serial(sb);
-        sb.append("\tpublic ").append(entity)
-                .append("DTO(Long id, String backupLocation, String filesAttachmentLocation, ")
-                .append("String pluginsLocation, boolean aktivan) {\n")
-                .append("\t\tsuper(id, backupLocation, filesAttachmentLocation, pluginsLocation, aktivan);\n")
-                .append("\t}\n}\n");
-        return sb.toString();
-    }
-
-    private static String settingsHome(GenerationContext ctx) {
-        String entity = ctx.getEntityName();
-        Set<String> imports = new TreeSet<>();
-        imports.add("java.io.Serial");
-        imports.add("jakarta.ejb.LocalBean");
-        imports.add("jakarta.ejb.Stateless");
-        imports.add("rs.co.bora5.programs.bab.session.AbstractSettingsHome");
-        imports.add("rs.co.bora5.programs.bab.utils.Primary");
-        imports.add(ctx.dtoPackage() + "." + entity + "DTO");
-        imports.add(ctx.modelPackage() + "." + entity);
-
-        StringBuilder sb = new StringBuilder();
-        header(sb, ctx.homePackage(), imports);
-        sb.append("@Stateless\n@LocalBean\n@Primary\n")
-                .append("public class ").append(entity).append("Home extends AbstractSettingsHome<")
-                .append(entity).append(", ").append(entity).append("DTO> {\n\n");
-        serial(sb);
-        sb.append("\tpublic ").append(entity).append("Home() {\n")
-                .append("\t\tsuper(").append(entity).append(".class, ").append(entity)
-                .append("DTO.class);\n\t}\n\n")
-                .append("\t@Override\n\tpublic String getSelect() {\n")
-                .append("\t\treturn super.getSelect() + \"(x.id, x.backupLocation, ")
-                .append("x.filesAttachmentLocation, x.pluginsLocation, x.aktivan)\";\n")
-                .append("\t}\n}\n");
-        return sb.toString();
-    }
-
-    private static String settingsWindow(GenerationContext ctx) {
-        String entity = ctx.getEntityName();
-        Set<String> imports = new TreeSet<>();
-        imports.add("java.io.Serial");
-        imports.add("jakarta.enterprise.context.Dependent");
-        imports.add("rs.co.bora5.programs.bab.front.windowses.GenericSettingsWindow");
-        imports.add("rs.co.bora5.programs.bab.utils.Primary");
-        imports.add(ctx.dtoPackage() + "." + entity + "DTO");
-        imports.add(ctx.homePackage() + "." + entity + "Home");
-        imports.add(ctx.modelPackage() + "." + entity);
-        imports.add(ctx.modelPackage() + "." + ctx.getKType());
-
-        StringBuilder sb = new StringBuilder();
-        header(sb, ctx.windowPackage(), imports);
-        sb.append("@Dependent\n@Primary\n")
-                .append("public class Edit").append(entity)
-                .append("Window extends GenericSettingsWindow<")
-                .append(entity).append(", ").append(entity).append("Home, ")
-                .append(entity).append("DTO, ").append(ctx.getKType()).append("> {\n\n");
-        serial(sb);
-        sb.append("}\n");
-        return sb.toString();
-    }
-
-    private static java.util.List<BABjField> settingsFields() {
-        return java.util.List.of(
-                new BABjField("backupLocation", BABjField.Kind.SIMPLE, "String", null, null),
-                new BABjField("filesAttachmentLocation", BABjField.Kind.SIMPLE, "String", null, null),
-                new BABjField("pluginsLocation", BABjField.Kind.SIMPLE, "String", null, null),
-                new BABjField("aktivan", BABjField.Kind.SIMPLE, "boolean", null, null));
-    }
-
     private static void appendImportField(GenerationContext ctx, StringBuilder sb) {
         if (!ctx.isGenerateCsvImport() && !ctx.isGenerateXlsImport()) {
             return;
@@ -520,9 +430,6 @@ public final class CodeTemplates {
     // ----------------------------------------------------------------- Window
 
     public static String window(GenerationContext ctx) {
-        if (ctx.isSettingsAdministration()) {
-            return settingsWindow(ctx);
-        }
         String entity = ctx.getEntityName();
 
         Set<String> imports = new TreeSet<>();
