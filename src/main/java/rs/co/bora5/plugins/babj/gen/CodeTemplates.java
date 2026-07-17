@@ -10,7 +10,7 @@ import rs.co.bora5.plugins.babj.model.BABjNaming;
 import rs.co.bora5.plugins.babj.model.GenerationContext;
 
 /**
- * Renders the four babj artifacts (DTO, Home, View, EditWindow) as Java source text, following the
+ * Renders the four BABj artifacts (DTO, Home, View, EditWindow) as Java source text, following the
  * conventions observed in the wastex codebase: {@code AbstractHome} projection via
  * {@code getSelect()}/{@code getJoin()}, declarative {@code GenericView} annotations, and a
  * {@code GenericWindow} with {@code @PropertyId} fields and combo-box factory calls.

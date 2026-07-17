@@ -51,7 +51,7 @@ public final class EntityModel {
         return fields;
     }
 
-    /** Whether the class looks like a babj entity: a JPA {@code @Entity} or an {@code AbstractEntity}. */
+    /** Whether the class looks like a BABj entity: a JPA {@code @Entity} or an {@code AbstractEntity}. */
     public static boolean isEntity(PsiClass psiClass) {
         if (psiClass == null || psiClass.getName() == null) {
             return false;

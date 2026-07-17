@@ -1,7 +1,7 @@
 # BABj Support — IntelliJ plugin
 
-Razvojna podrška za **babj** biblioteku (`rs.co.bora5.programs.bab`). Automatizuje
-konvencije koje babj nameće i skraćuje pisanje boilerplate-a.
+Razvojna podrška za **BABj** biblioteku (`rs.co.bora5.programs.bab`). Automatizuje
+konvencije koje BABj nameće i skraćuje pisanje boilerplate-a.
 
 ## Šta radi
 
@@ -27,7 +27,7 @@ Generator prepoznaje tipove polja i mapira ih:
 Operater (`K`) tip se auto-detektuje skeniranjem projekta za implementaciju
 `OperaterEntityInterface` (npr. `Korisnik`) i prefiluje u dijalogu.
 
-**Pokretanje:** kursor u entitetu → `Alt+Insert` (Generate) → **babj CRUD (DTO, Home, View, Window)**.
+**Pokretanje:** kursor u entitetu → `Alt+Insert` (Generate) → **BABj CRUD (DTO, Home, View, Window)**.
 Otvori se dijalog sa unapred popunjenim parametrima (osnovni paket, `K` tip, rola,
 naziv view-a, ruta, naslov) i čekboksovima koji artefakti se generišu. Postojeći fajlovi
 se **ne** gaze.
@@ -70,11 +70,11 @@ Distribucija: `.zip` iz `build/distributions/` se instalira preko
 
 ```
 src/main/java/rs/co/bora5/plugins/babj/
-├── action/        GenerateBabjCrudAction + dijalog
+├── action/        GenerateBABjCrudAction + dijalog
 ├── gen/           CodeTemplates (renderer) + writer/generator
 ├── inspection/    MissingEditWindowInspection + quick-fix
 └── model/         parser entiteta (EntityModel), polja, naming, kontekst
 src/main/resources/
 ├── META-INF/plugin.xml
-└── liveTemplates/babj.xml
+└── liveTemplates/BABj.xml
 ```

@@ -20,7 +20,7 @@ import com.intellij.psi.util.PsiUtil;
 import rs.co.bora5.plugins.babj.model.BABjNaming;
 
 /**
- * Shared PSI helpers for the babj inspections: resolving a subclass' generic type arguments,
+ * Shared PSI helpers for the BABj inspections: resolving a subclass' generic type arguments,
  * checking entity properties (fields <i>or</i> getters), extracting string literals from a method,
  * and splitting a projection/column string at top level.
  */

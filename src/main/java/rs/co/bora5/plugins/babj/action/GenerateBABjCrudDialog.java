@@ -17,7 +17,7 @@ import rs.co.bora5.plugins.babj.model.GenerationContext;
 import rs.co.bora5.plugins.babj.model.OperaterTypeResolver;
 
 /**
- * Configuration dialog for the babj CRUD generator. Pre-fills every field from the selected entity
+ * Configuration dialog for the BABj CRUD generator. Pre-fills every field from the selected entity
  * and the observed package layout, so the common case is just pressing OK.
  */
 public class GenerateBABjCrudDialog extends DialogWrapper {
