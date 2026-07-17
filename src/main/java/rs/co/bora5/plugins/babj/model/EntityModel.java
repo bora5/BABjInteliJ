@@ -116,15 +116,15 @@ public final class EntityModel {
                 continue;
             }
 
-            if (hasAny(field, MANY_TO_ONE) || hasAny(field, ONE_TO_ONE)) {
-                PsiClass tc = PsiUtil.resolveClassInClassTypeOnly(type);
+            PsiClass tc = PsiUtil.resolveClassInClassTypeOnly(type);
+            if (hasAny(field, MANY_TO_ONE) || hasAny(field, ONE_TO_ONE)
+                    || isAbstractEntityType(tc)) {
                 String simple = tc != null ? tc.getName() : type.getPresentableText();
                 String fqn = tc != null ? tc.getQualifiedName() : null;
                 fields.add(new BABjField(name, BABjField.Kind.ASSOCIATION, simple, fqn, pickDisplayProperty(tc)));
                 continue;
             }
 
-            PsiClass tc = PsiUtil.resolveClassInClassTypeOnly(type);
             if (tc != null && tc.isEnum()) {
                 fields.add(new BABjField(name, BABjField.Kind.ENUM, tc.getName(), tc.getQualifiedName(), null));
                 continue;
@@ -189,29 +189,42 @@ public final class EntityModel {
     }
 
     /**
-     * Chooses the property to project for an association's grid column: prefers {@code naziv}, then
-     * {@code username} (operator-like entities), then the first {@code String} field, falling back
-     * to {@code naziv} when the target cannot be inspected.
+     * Chooses the String property to project for an association's DTO/grid column: prefers
+     * {@code naziv}, then {@code username}, {@code name}, {@code oznaka}, then the first remaining
+     * {@code String} field. Inherited fields are included.
      */
     private static String pickDisplayProperty(PsiClass target) {
         if (target == null) {
             return "naziv";
         }
-        if (target.findFieldByName("naziv", true) != null) {
-            return "naziv";
-        }
-        if (target.findFieldByName("username", true) != null) {
-            return "username";
+        for (String preferred : List.of("naziv", "username", "name", "oznaka")) {
+            PsiField field = target.findFieldByName(preferred, true);
+            if (isStringField(field)) {
+                return preferred;
+            }
         }
         for (PsiField f : target.getAllFields()) {
             if (f.hasModifierProperty(PsiModifier.STATIC) || "serialVersionUID".equals(f.getName())) {
                 continue;
             }
-            if (f.getType().equalsToText("java.lang.String")) {
+            if (isStringField(f)) {
                 return f.getName();
             }
         }
         return "naziv";
+    }
+
+    private static boolean isStringField(PsiField field) {
+        if (field == null) {
+            return false;
+        }
+        PsiType type = field.getType();
+        PsiClass typeClass = PsiUtil.resolveClassInClassTypeOnly(type);
+        if (typeClass != null) {
+            return "java.lang.String".equals(typeClass.getQualifiedName());
+        }
+        String canonical = type.getCanonicalText();
+        return "String".equals(canonical) || "java.lang.String".equals(canonical);
     }
 
     private static String simpleTypeName(PsiType type, PsiClass tc) {
@@ -237,6 +250,10 @@ public final class EntityModel {
         return c.startsWith("java.util.Set") || c.startsWith("java.util.List")
                 || c.startsWith("java.util.Collection") || c.startsWith("java.util.Map")
                 || c.startsWith("java.util.SortedSet") || c.startsWith("java.util.SortedMap");
+    }
+
+    private static boolean isAbstractEntityType(PsiClass typeClass) {
+        return typeClass != null && InheritanceUtil.isInheritor(typeClass, ABSTRACT_ENTITY);
     }
 
     private static boolean hasAny(PsiModifierListOwner owner, String[] fqns) {

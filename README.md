@@ -14,7 +14,7 @@ conventional packages used by BABj projects:
 
 | Artifact | Package | Contents |
 |---|---|---|
-| `<Entity>DTO` | `…front.views.projections` | Projection with a `(Long id, …)` constructor, getters, and setters; associations are flattened to `String` |
+| `<Entity>DTO` | `…front.views.projections` | Projection with a `(Long id, …)` constructor, getters, and setters; associations are flattened to `String` while enums retain their concrete type |
 | `<Entity>Home` | `…sesion` | `@Stateless @LocalBean @Primary` service with `getSelect()` and `getJoin()` |
 | `<Entity>View` | `…front.views` | Declarative `GenericView` with `@EnableNew/Edit/Delete`, `@AdminTypes`, `@ColumnNames`, and `@Route` |
 | `Edit<Entity>Window` | `…front.windowses` | `GenericWindow` with `@PropertyId` fields and combo-box factory calls |
@@ -23,8 +23,10 @@ The generator maps entity fields as follows:
 
 - `@ManyToOne` / `@OneToOne` → `LEFT JOIN`, an `alias.<display>` projection, and
   `createSimpleComboBox(...)` in the edit window. The display property is discovered on the target
-  entity, preferring `naziv`, then `username`, then the first `String` field.
-- `enum` → a `ComboBox` populated from `values()`.
+  entity, preferring String fields named `naziv`, `username`, `name`, or `oznaka`, then the first
+  remaining `String` field. Types inheriting BAB `AbstractEntity` are recognized as associations
+  even when the JPA annotation is on the getter.
+- `enum` → its concrete type in DTO and Home, plus a typed `ComboBox` populated from `values()`.
 - `LocalDate`, `LocalDateTime`, `LocalTime`, numbers, `boolean`, and `String` → matching Vaadin fields.
 - Collections (`@OneToMany` / `@ManyToMany`) are skipped.
 
