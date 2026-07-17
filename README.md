@@ -49,6 +49,9 @@ used by every generated CRUD artifact.
 - CSV and Excel import-window scaffolds with BABj's upload base classes.
 - A `GenericReportWindow` scaffold with lifecycle hooks for print, e-mail, or Excel output.
 - Optional `@EnableExport` support on generated views.
+- Type-safe attachment integration for BABj database and file-system attachment parent entities.
+- A CDI messaging agent that broadcasts matching entity lifecycle events to other BABj agents.
+- A complete settings-administration quartet for entities extending `AbstractSettings`.
 
 ### 3. Live templates
 
@@ -89,10 +92,11 @@ This is a static simulation: it does not instantiate agents or execute applicati
 
 ## Roadmap
 
-- attachment module assistance based on BABj attachment entity/view interfaces
-- messaging scaffolds for e-mail, SMS, and agent messages
-- administration-specific generators and inspections
+- XSD/JAXB configuration wizard for `GenericXMLUploadFileWindow`
+- specialized mail/SMS server and outbox administration wizards
 - runtime Agent Studio tracing in addition to the current static simulator
+
+See [docs/TESTING.md](docs/TESTING.md) for a complete manual test matrix.
 
 ## Build and run
 

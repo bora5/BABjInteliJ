@@ -20,7 +20,7 @@
           <li><b>CRUD Designer</b> — selects and orders fields, chooses edit controls, and previews
               the generated grid and form.</li>
           <li><b>Extended generators</b> — scaffolds REST endpoints, CSV/Excel imports, reports,
-              and export-enabled views.</li>
+              export-enabled views, attachments, messaging agents, and settings administration.</li>
           <li><b>Agent Studio</b> — visualizes static event routing, safety criteria, and actions,
               with an event-reaction simulator.</li>
         </ul>
