@@ -53,6 +53,8 @@
                 text="babj CRUD (DTO, Home, View, Window)"
                 description="Generiše babj kvartet iz izabranog JPA entiteta">
             <add-to-group group-id="GenerateGroup" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
     </actions>
 </idea-plugin>
