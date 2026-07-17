@@ -38,11 +38,13 @@ String` constants, and supports selecting multiple roles for `@AdminTypes`.
 **Run it:** place the caret in an entity, press `Alt+Insert` (Generate), and select
 **BABj Code Generator**. The dialog pre-fills the base package, operator choices,
 roles registry, role choices, view class name, route, and title, and lets you choose which artifacts
-to generate. Existing files are never overwritten.
+to generate. Existing files are skipped by default; an explicit recreation option requires a
+second warning confirmation before any file is replaced.
 
 The **CRUD Designer** tab lets you include/exclude and reorder fields, override the inferred Vaadin
 editor, and preview the resulting `@ColumnNames` projection and edit form. The same field model is
-used by every generated CRUD artifact.
+used by every generated CRUD artifact. Less frequently used generators live under
+**Additional generators**, while messaging-agent generation has its own **Agent** tab.
 
 ### 2. Extended generators
 
@@ -53,7 +55,6 @@ used by every generated CRUD artifact.
 - Optional `@EnableExport` support on generated views.
 - Type-safe attachment integration for BABj database and file-system attachment parent entities.
 - A CDI messaging agent that broadcasts matching entity lifecycle events to other BABj agents.
-- A complete settings-administration quartet for entities extending `AbstractSettings`.
 
 ### 3. Live templates
 
@@ -66,8 +67,9 @@ used by every generated CRUD artifact.
 - **`getSelect()` field validation** checks every `alias.property` token against the entity model.
   Alias `x` is the entity; additional aliases are resolved from `getJoin()`, including chained joins.
   Functions such as `CONCAT(...)` and literals are ignored.
-- **`@ColumnNames` validation** checks each entity property path and verifies that the optional key
-  is available from the service DTO.
+- **`@ColumnNames` validation** checks each entity property path, verifies that the optional key is
+  available from the service DTO, and accepts the optional filter/sorting boolean flags in
+  `property~key~Label~filterEnabled~sortingEnabled` entries.
 - **Annotation property validation** checks entity-property references in filters, field-visibility,
   status, uniqueness, and `@PropertyId` bindings.
 

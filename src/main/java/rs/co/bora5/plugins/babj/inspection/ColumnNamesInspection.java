@@ -18,9 +18,10 @@ import com.intellij.psi.PsiLiteralExpression;
 
 /**
  * Validates a {@code GenericView}'s {@code @ColumnNames} entries. Each entry is
- * {@code property~key~Header}: the {@code property} path (optionally {@code *}-prefixed) must resolve
- * against the entity, and the {@code key} — when present — must be a property projected by the
- * service, i.e. a field of the view's DTO.
+ * {@code property~key~Header[~filterEnabled[~sortingEnabled]]}: the {@code property} path
+ * (optionally {@code *}-prefixed) must resolve against the entity, and the {@code key} — when
+ * present — must be a property projected by the service, i.e. a field of the view's DTO. The two
+ * trailing boolean flags are optional.
  */
 public class ColumnNamesInspection extends AbstractBaseJavaLocalInspectionTool {
 
@@ -71,9 +72,29 @@ public class ColumnNamesInspection extends AbstractBaseJavaLocalInspectionTool {
                         "@ColumnNames: key '" + key + "' is not provided by the service (DTO "
                                 + dto.getName() + " has no '" + key + "' property)."));
             }
+
+            validateOptionalBoolean(parts, 3, "filter enabled", manager, literal, isOnTheFly,
+                    problems);
+            validateOptionalBoolean(parts, 4, "sorting enabled", manager, literal, isOnTheFly,
+                    problems);
         }
 
         return problems.isEmpty() ? null : problems.toArray(ProblemDescriptor.EMPTY_ARRAY);
+    }
+
+    private static void validateOptionalBoolean(String[] parts, int index, String label,
+                                                InspectionManager manager,
+                                                PsiLiteralExpression literal, boolean onTheFly,
+                                                List<ProblemDescriptor> problems) {
+        if (parts.length <= index) {
+            return;
+        }
+        String value = parts[index].trim();
+        if (!value.isEmpty() && !"true".equalsIgnoreCase(value)
+                && !"false".equalsIgnoreCase(value)) {
+            problems.add(problem(manager, literal, onTheFly,
+                    "@ColumnNames: " + label + " must be true or false."));
+        }
     }
 
     private static ProblemDescriptor problem(InspectionManager manager, PsiLiteralExpression literal,

@@ -1,7 +1,8 @@
 # BABj IntelliJ Plugin — Manual Test Matrix
 
 This guide covers every plugin feature. Use a disposable branch of a BABj application because the
-generator creates real Java source files. It never overwrites an existing file.
+generator creates real Java source files. It skips existing files unless recreation is explicitly
+enabled and confirmed in a second warning dialog.
 
 ## 1. Install the development build
 
@@ -11,7 +12,7 @@ Build the plugin:
 .\gradlew.bat buildPlugin
 ```
 
-Install `build/distributions/BABjInteliJ-1.3.0.zip` through:
+Install `build/distributions/BABjInteliJ-1.4.0.zip` through:
 
 `Settings → Plugins → ⚙ → Install Plugin from Disk`
 
@@ -66,14 +67,18 @@ Expected:
 - multiple selected roles produce an `@AdminTypes(roles = {...})` array;
 - no `ADMIN` or `Roles` class name is hard-coded.
 
-## 5. No-overwrite guarantee
+## 5. Safe file recreation
 
 1. Generate any artifact.
 2. Add a recognizable comment to it.
 3. Run the same generation again.
+4. Confirm that the file is skipped while **Recreate existing files** is disabled.
+5. Enable **Recreate existing files**, start generation, and cancel the warning dialog.
+6. Confirm that the recognizable comment remains.
+7. Repeat, enable recreation, and approve the warning.
 
-Expected: the result dialog lists the file under **Skipped (already exists)** and the comment remains
-unchanged.
+Expected: the safe run lists the file under **Skipped (already exists)**. Cancelling the warning
+changes nothing. Approving it replaces the file and lists it under **Recreated**.
 
 ## 6. REST endpoint
 
@@ -164,24 +169,7 @@ Runtime check: register a small receiver agent supporting `AgentMessageEvent`, f
 receiver gets the broadcast. The generated agent intentionally does not send e-mail/SMS directly;
 receivers decide how the message is delivered.
 
-## 11. Settings administration specialization
-
-1. Use a concrete entity extending `AbstractSettings`.
-2. Select DTO, Home, View, Window, and **BABj settings administration specialization**.
-3. Generate and compile.
-
-Expected:
-
-- DTO extends `AbstractSettingsDTO`;
-- Home extends `AbstractSettingsHome` and projects all four settings fields;
-- View extends `GenericSettingsView` and enables its admin-only backup button;
-- Window extends `GenericSettingsWindow`;
-- the option is disabled for ordinary entities.
-
-Runtime check: open the generated View as an administrator, create an active settings row, edit the
-three locations, and verify that the backup button becomes available and invokes BABj backup logic.
-
-## 12. Agent Studio topology
+## 11. Agent Studio topology
 
 Create or use agents that reference concrete `AgentEvent`, `SafetyCriterion`, and `AgentAction`
 types. Open **BABj Agent Studio** and scan.
@@ -196,7 +184,7 @@ Expected:
 
 This is a static simulation. It never instantiates agents or executes application code.
 
-## 13. Remaining inspections and quick fixes
+## 12. Remaining inspections and quick fixes
 
 ### Missing EditWindow
 
@@ -209,13 +197,19 @@ Insert a nonexistent property into annotations such as `@AddCondition`, `@Enable
 `@AdminVisibleFields`, `@SqlFieldName`, `@PropertyId`, or `@SingleUniqueField`. Expected: the
 property is highlighted and completion offers valid entity paths.
 
+### Optional `@ColumnNames` flags
+
+Use `property~key~Label~true~false` for a valid entity/DTO property. Expected: the fourth
+`filterEnabled` and fifth `sortingEnabled` tokens are accepted. Replace either flag with a value
+other than `true` or `false`; the inspection should report the invalid boolean.
+
 ### Home aliases
 
 In `getSelect()`, reference an unknown alias or an invalid joined property. In `getJoin()`, add a
 valid chained join and use it from `getSelect()`. Expected: invalid references are reported while
 valid chained aliases are accepted.
 
-## 14. Live templates
+## 13. Live templates
 
 In a Java class, type each abbreviation and press `Tab`:
 
@@ -226,7 +220,7 @@ In a Java class, type each abbreviation and press `Tab`:
 
 Expected: the matching BABj class skeleton is inserted and template variables are editable.
 
-## 15. Navigator tool window and action contexts
+## 14. Navigator tool window and action contexts
 
 1. Open **View → Tool Windows → BABj Navigator** from each member of a quartet.
 2. Press **Refresh from editor** and double-click every found artifact.
@@ -236,7 +230,7 @@ Expected: the module graph shows found and missing artifacts, navigation opens s
 generator remains available in all supported action contexts while a Java editor is active.
 Repeated refreshes must complete without EDT/read-action exceptions or blocking the IDE UI.
 
-## 16. Release verification
+## 15. Release verification
 
 Before publishing a plugin build, run:
 

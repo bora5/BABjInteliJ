@@ -22,6 +22,7 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.InheritanceUtil;
 import com.intellij.ui.components.JBCheckBox;
+import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextField;
@@ -70,8 +71,8 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
     private final JBCheckBox reportCheck = new JBCheckBox("Report window", false);
     private final JBCheckBox attachmentsCheck = new JBCheckBox("Attachment row action", false);
     private final JBCheckBox messagingCheck = new JBCheckBox("Entity messaging agent", false);
-    private final JBCheckBox administrationCheck =
-            new JBCheckBox("BABj settings administration specialization", false);
+    private final JBCheckBox overwriteCheck =
+            new JBCheckBox("Recreate existing files (confirmation required)", false);
 
     public GenerateBABjCrudDialog(@Nullable Project project, EntityModel model) {
         super(project);
@@ -122,19 +123,13 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
         attachmentsCheck.setToolTipText(attachment.isAvailable()
                 ? "Adds the matching BABj attachment View interface and typed upload components."
                 : "The entity must implement MultiAttachmentEntityInterface or MultiFileSystemAttachmentEntityInterface.");
-        administrationCheck.setEnabled(model.isSettingsCapable());
-        if (!model.isSettingsCapable()) {
-            administrationCheck.setToolTipText(
-                    "The entity must extend AbstractSettings for settings administration specialization.");
-        }
-
         setTitle("BABj CRUD generator — " + entity);
         init();
     }
 
     @Override
     protected @Nullable JComponent createCenterPanel() {
-        JPanel settings = FormBuilder.createFormBuilder()
+        JPanel artifacts = FormBuilder.createFormBuilder()
                 .addLabeledComponent("Base package:", basePackageField)
                 .addLabeledComponent("Operator (K) type:", kTypeField)
                 .addLabeledComponent("Roles class:", rolesTypeField)
@@ -148,6 +143,10 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
                 .addComponent(homeCheck)
                 .addComponent(viewCheck)
                 .addComponent(windowCheck)
+                .addSeparator()
+                .addComponent(overwriteCheck)
+                .getPanel();
+        JPanel additionalGenerators = FormBuilder.createFormBuilder()
                 .addComponent(exportCheck)
                 .addSeparator()
                 .addComponent(restCheck)
@@ -156,14 +155,19 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
                 .addComponent(xlsCheck)
                 .addComponent(reportCheck)
                 .addComponent(attachmentsCheck)
+                .getPanel();
+        JPanel agents = FormBuilder.createFormBuilder()
+                .addComponent(new JBLabel(
+                        "Generate optional BABj agent integration for this entity."))
                 .addComponent(messagingCheck)
-                .addComponent(administrationCheck)
                 .getPanel();
         JBTabbedPane tabs = new JBTabbedPane();
-        JBScrollPane settingsScroll = new JBScrollPane(settings);
-        settingsScroll.setBorder(null);
-        tabs.addTab("Artifacts", settingsScroll);
+        JBScrollPane artifactsScroll = new JBScrollPane(artifacts);
+        artifactsScroll.setBorder(null);
+        tabs.addTab("Artifacts", artifactsScroll);
         tabs.addTab("CRUD Designer", fieldDesigner);
+        tabs.addTab("Additional generators", additionalGenerators);
+        tabs.addTab("Agent", agents);
         return tabs;
     }
 
@@ -235,20 +239,15 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
             return new ValidationInfo(
                     "Generate the View together with its attachment integration.", viewCheck);
         }
-        if (attachmentsCheck.isSelected() && project != null) {
+        if (attachmentsCheck.isSelected() && project != null && !overwriteCheck.isSelected()) {
             String viewFqn = basePackageField.getText().trim() + ".front.views."
                     + viewNameField.getText().trim();
             if (JavaPsiFacade.getInstance(project)
                     .findClass(viewFqn, GlobalSearchScope.projectScope(project)) != null) {
                 return new ValidationInfo(
-                        "The target View already exists and is never overwritten; choose a new View name or add attachment support manually.",
+                        "The target View already exists; enable recreation, choose a new View name, or add attachment support manually.",
                         viewNameField);
             }
-        }
-        if (administrationCheck.isSelected() && !model.isSettingsCapable()) {
-            return new ValidationInfo(
-                    "Settings administration specialization requires AbstractSettings.",
-                    administrationCheck);
         }
         return null;
     }
@@ -278,7 +277,7 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
                 attachmentsCheck.isSelected(),
                 model.getAttachmentSupport(),
                 messagingCheck.isSelected(),
-                administrationCheck.isSelected());
+                overwriteCheck.isSelected());
     }
 
     private void refreshRoles() {

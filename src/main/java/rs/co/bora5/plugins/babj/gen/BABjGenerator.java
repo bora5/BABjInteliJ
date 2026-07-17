@@ -18,82 +18,88 @@ public final class BABjGenerator {
     private BABjGenerator() {
     }
 
-    /** Outcome of a generation run: which files were created, which were skipped, and what to open. */
-    public record Result(List<String> created, List<String> skipped, PsiFile fileToOpen) {
+    /** Outcome of a generation run: which files were created, recreated, skipped, and what to open. */
+    public record Result(List<String> created, List<String> recreated, List<String> skipped,
+                         PsiFile fileToOpen) {
     }
 
     public static Result generate(Project project, VirtualFile sourceRoot, GenerationContext ctx) {
         List<String> created = new ArrayList<>();
+        List<String> recreated = new ArrayList<>();
         List<String> skipped = new ArrayList<>();
         PsiFile toOpen = null;
         String entity = ctx.getEntityName();
 
         if (ctx.isGenerateDto()) {
             PsiFile f = write(project, sourceRoot, ctx.dtoPackage(), entity + "DTO.java",
-                    CodeTemplates.dto(ctx), created, skipped);
+                    CodeTemplates.dto(ctx), ctx.isOverwriteExisting(), created, recreated, skipped);
             toOpen = firstNonNull(toOpen, f);
         }
         if (ctx.isGenerateHome()) {
             PsiFile f = write(project, sourceRoot, ctx.homePackage(), entity + "Home.java",
-                    CodeTemplates.home(ctx), created, skipped);
+                    CodeTemplates.home(ctx), ctx.isOverwriteExisting(), created, recreated, skipped);
             toOpen = firstNonNull(toOpen, f);
         }
         if (ctx.isGenerateView()) {
             PsiFile f = write(project, sourceRoot, ctx.viewPackage(), ctx.getViewName() + ".java",
-                    CodeTemplates.view(ctx), created, skipped);
+                    CodeTemplates.view(ctx), ctx.isOverwriteExisting(), created, recreated, skipped);
             toOpen = firstNonNull(toOpen, f);
         }
         if (ctx.isGenerateWindow()) {
             PsiFile f = write(project, sourceRoot, ctx.windowPackage(), "Edit" + entity + "Window.java",
-                    CodeTemplates.window(ctx), created, skipped);
+                    CodeTemplates.window(ctx), ctx.isOverwriteExisting(), created, recreated, skipped);
             toOpen = firstNonNull(toOpen, f);
         }
         if (ctx.isGenerateRest()) {
             PsiFile f = write(project, sourceRoot, ctx.restPackage(), entity + "Endpoint.java",
-                    CodeTemplates.restEndpoint(ctx), created, skipped);
+                    CodeTemplates.restEndpoint(ctx), ctx.isOverwriteExisting(), created, recreated, skipped);
             toOpen = firstNonNull(toOpen, f);
         }
         if (ctx.isGenerateCsvImport()) {
             PsiFile f = write(project, sourceRoot, ctx.windowPackage(),
                     "Import" + entity + "CsvWindow.java",
-                    CodeTemplates.csvImport(ctx), created, skipped);
+                    CodeTemplates.csvImport(ctx), ctx.isOverwriteExisting(), created, recreated, skipped);
             toOpen = firstNonNull(toOpen, f);
         }
         if (ctx.isGenerateXlsImport()) {
             PsiFile f = write(project, sourceRoot, ctx.windowPackage(),
                     "Import" + entity + "XlsWindow.java",
-                    CodeTemplates.xlsImport(ctx), created, skipped);
+                    CodeTemplates.xlsImport(ctx), ctx.isOverwriteExisting(), created, recreated, skipped);
             toOpen = firstNonNull(toOpen, f);
         }
         if (ctx.isGenerateReport()) {
             PsiFile f = write(project, sourceRoot, ctx.windowPackage(), entity + "ReportWindow.java",
-                    CodeTemplates.report(ctx), created, skipped);
+                    CodeTemplates.report(ctx), ctx.isOverwriteExisting(), created, recreated, skipped);
             toOpen = firstNonNull(toOpen, f);
         }
         if (ctx.isGenerateMessagingAgent()) {
             PsiFile f = write(project, sourceRoot, ctx.agentPackage(),
                     entity + "MessagingAgent.java",
-                    CodeTemplates.messagingAgent(ctx), created, skipped);
+                    CodeTemplates.messagingAgent(ctx), ctx.isOverwriteExisting(), created, recreated, skipped);
             toOpen = firstNonNull(toOpen, f);
         }
 
-        return new Result(created, skipped, toOpen);
+        return new Result(created, recreated, skipped, toOpen);
     }
 
     private static PsiFile write(Project project, VirtualFile sourceRoot, String pkg, String fileName,
-                                 String text, List<String> created, List<String> skipped) {
+                                 String text, boolean overwriteExisting, List<String> created,
+                                 List<String> recreated, List<String> skipped) {
         PsiDirectory dir = BABjWriter.findOrCreatePackageDir(project, sourceRoot, pkg);
         if (dir == null) {
             skipped.add(fileName + " (could not create the package)");
             return null;
         }
-        PsiFile f = BABjWriter.writeJava(project, dir, fileName, text);
-        if (f == null) {
+        BABjWriter.WriteResult result = BABjWriter.writeJava(
+                project, dir, fileName, text, overwriteExisting);
+        if (result.file() == null) {
             skipped.add(fileName + " (already exists)");
+        } else if (result.replaced()) {
+            recreated.add(fileName);
         } else {
             created.add(fileName);
         }
-        return f;
+        return result.file();
     }
 
     private static PsiFile firstNonNull(PsiFile current, PsiFile candidate) {

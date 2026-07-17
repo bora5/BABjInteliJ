@@ -75,6 +75,14 @@ public class GenerateBABjCrudAction extends AnAction {
             return;
         }
         GenerationContext ctx = dialog.buildContext();
+        if (ctx.isOverwriteExisting()
+                && Messages.showYesNoDialog(project,
+                "Selected files that already exist will be completely replaced with newly generated code. "
+                        + "Manual changes in those files will be lost. Continue?",
+                "Recreate Existing BABj Files", "Recreate", "Cancel",
+                Messages.getWarningIcon()) != Messages.YES) {
+            return;
+        }
 
         BABjGenerator.Result result = WriteCommandAction.writeCommandAction(project)
                 .withName("BABj CRUD Generator")
@@ -91,6 +99,13 @@ public class GenerateBABjCrudAction extends AnAction {
         if (!result.created().isEmpty()) {
             sb.append("Created:\n");
             result.created().forEach(n -> sb.append("  • ").append(n).append('\n'));
+        }
+        if (!result.recreated().isEmpty()) {
+            if (!sb.isEmpty()) {
+                sb.append('\n');
+            }
+            sb.append("Recreated:\n");
+            result.recreated().forEach(n -> sb.append("  • ").append(n).append('\n'));
         }
         if (!result.skipped().isEmpty()) {
             if (!sb.isEmpty()) {
