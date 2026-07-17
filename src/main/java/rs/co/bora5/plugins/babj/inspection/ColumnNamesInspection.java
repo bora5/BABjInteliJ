@@ -66,7 +66,7 @@ public class ColumnNamesInspection extends AbstractBaseJavaLocalInspectionTool {
             }
 
             String key = parts.length > 1 ? parts[1].trim() : "";
-            if (dto != null && IDENT.matcher(key).matches() && BabjPsi.hasProperty(dto, key)) {
+            if (dto != null && IDENT.matcher(key).matches() && BabjPsi.isMissingProperty(dto, key)) {
                 problems.add(problem(manager, literal, isOnTheFly,
                         "@ColumnNames: ključ '" + key + "' nije podržan iz servisa (nema polja '"
                                 + key + "' u DTO " + dto.getName() + ")."));
