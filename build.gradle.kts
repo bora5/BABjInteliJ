@@ -1,6 +1,9 @@
 plugins {
     id("java")
-    id("org.jetbrains.intellij.platform") version "2.5.0"
+    // No version here: the plugin is put on the classpath by the settings plugin
+    // (org.jetbrains.intellij.platform.settings in settings.gradle.kts). Requesting a
+    // version in both places fails with "already on the classpath with an unknown version".
+    id("org.jetbrains.intellij.platform")
 }
 
 group = providers.gradleProperty("group").get()
@@ -24,6 +27,11 @@ java {
 
 intellijPlatform {
     pluginConfiguration {
-        ideaVersion { sinceBuild = "243" }
+        ideaVersion {
+            sinceBuild = "243"
+            // No upper bound: the plugin uses only stable APIs, so let it load on
+            // current IDEs (e.g. 2026.2 / build 262) and future ones without a rebuild.
+            untilBuild = provider { null }
+        }
     }
 }
