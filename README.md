@@ -36,10 +36,17 @@ se **ne** gaze.
 
 `bview`, `bwin`, `bhome`, `bdto` — brzi skeleti za pojedinačne klase.
 
-### 3. Inspekcija
+### 3. Inspekcije
 
-Upozorava kad `GenericView` nema prateći `Edit<Entity>Window` (obavezno po konvenciji),
-sa quick-fix-om (`Alt+Enter`) koji ga generiše.
+- **Nedostajući Edit prozor** — upozorava kad `GenericView` nema prateći
+  `Edit<Entity>Window` (obavezno po konvenciji), sa quick-fix-om (`Alt+Enter`) koji ga generiše.
+- **Provera polja u `getSelect()`** — svaki `alias.polje` token u projekciji Home klase se
+  validira protiv stvarnih polja entiteta, uz razrešavanje alias-a iz `getJoin()`
+  (`x` = entitet; ostali alias-i iz `LEFT JOIN`-ova, uključujući ulančane join-ove).
+  Funkcije (`CONCAT(...)`) i literali se preskaču.
+- **Provera `@ColumnNames`** — putanja kolone (prvi `~`-token, uz `*` prefiks) se validira
+  protiv polja entiteta, a ključ (drugi `~`-token) protiv **DTO-a servisa** — tj. da je kolona
+  zaista „podržana iz servisa".
 
 ## Pokretanje i build
 

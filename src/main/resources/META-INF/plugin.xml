@@ -29,6 +29,22 @@
                          enabledByDefault="true"
                          level="WARNING"
                          implementationClass="rs.co.bora5.plugins.babj.inspection.MissingEditWindowInspection"/>
+
+        <localInspection language="JAVA"
+                         shortName="BabjHomeSelect"
+                         displayName="babj: provera polja u getSelect (uz getJoin alias-e)"
+                         groupName="babj"
+                         enabledByDefault="true"
+                         level="WARNING"
+                         implementationClass="rs.co.bora5.plugins.babj.inspection.HomeSelectInspection"/>
+
+        <localInspection language="JAVA"
+                         shortName="BabjColumnNames"
+                         displayName="babj: provera @ColumnNames (entitet + DTO servisa)"
+                         groupName="babj"
+                         enabledByDefault="true"
+                         level="WARNING"
+                         implementationClass="rs.co.bora5.plugins.babj.inspection.ColumnNamesInspection"/>
     </extensions>
 
     <actions>
