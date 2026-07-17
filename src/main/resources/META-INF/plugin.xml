@@ -16,8 +16,11 @@
         </ul>
         ]]></description>
 
-    <!-- Java PSI je jedina neophodna zavisnost; radi i na Community Edition. -->
     <depends>com.intellij.java</depends>
+
+    <!-- Optional JPA integration (Ultimate): core plugin still loads with PSI-only scanning when
+         the JPA plugin is absent (Community, or an unlicensed sandbox). -->
+    <depends optional="true" config-file="babj-jpa.xml">com.intellij.javaee.jpa</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <defaultLiveTemplates file="/liveTemplates/babj.xml"/>
