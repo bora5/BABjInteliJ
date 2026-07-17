@@ -14,6 +14,7 @@ import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
@@ -37,9 +38,9 @@ public class GenerateBABjCrudAction extends AnAction {
 
     @Override
     public void update(@NotNull AnActionEvent e) {
-        // Always available in a Java file; whether the file actually holds an entity is validated on
-        // invocation (with clear feedback), so the action is never silently hidden from Generate.
-        e.getPresentation().setEnabledAndVisible(e.getData(CommonDataKeys.PSI_FILE) instanceof PsiJavaFile);
+        // Find Action and some Generate menu contexts do not expose PSI_FILE even when a Java editor
+        // is active. Fall back to the selected editor so the action is not incorrectly disabled.
+        e.getPresentation().setEnabledAndVisible(findJavaFile(e) != null);
     }
 
     @Override
@@ -105,7 +106,8 @@ public class GenerateBABjCrudAction extends AnAction {
     }
 
     private static PsiClass findEntityClass(AnActionEvent e) {
-        if (!(e.getData(CommonDataKeys.PSI_FILE) instanceof PsiJavaFile javaFile)) {
+        PsiJavaFile javaFile = findJavaFile(e);
+        if (javaFile == null) {
             return null;
         }
         // Prefer the class under the caret.
@@ -124,5 +126,26 @@ public class GenerateBABjCrudAction extends AnAction {
             }
         }
         return null;
+    }
+
+    private static PsiJavaFile findJavaFile(AnActionEvent e) {
+        if (e.getData(CommonDataKeys.PSI_FILE) instanceof PsiJavaFile javaFile) {
+            return javaFile;
+        }
+
+        Project project = e.getProject();
+        if (project == null) {
+            return null;
+        }
+        Editor editor = e.getData(CommonDataKeys.EDITOR);
+        if (editor == null) {
+            editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+        }
+        if (editor == null) {
+            return null;
+        }
+
+        PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.getDocument());
+        return psiFile instanceof PsiJavaFile javaFile ? javaFile : null;
     }
 }
