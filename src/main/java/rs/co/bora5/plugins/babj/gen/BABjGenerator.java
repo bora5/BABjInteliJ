@@ -54,12 +54,12 @@ public final class BABjGenerator {
 
     private static PsiFile write(Project project, VirtualFile sourceRoot, String pkg, String fileName,
                                  String text, List<String> created, List<String> skipped) {
-        PsiDirectory dir = BabjWriter.findOrCreatePackageDir(project, sourceRoot, pkg);
+        PsiDirectory dir = BABjWriter.findOrCreatePackageDir(project, sourceRoot, pkg);
         if (dir == null) {
             skipped.add(fileName + " (paket se ne može kreirati)");
             return null;
         }
-        PsiFile f = BabjWriter.writeJava(project, dir, fileName, text);
+        PsiFile f = BABjWriter.writeJava(project, dir, fileName, text);
         if (f == null) {
             skipped.add(fileName + " (već postoji)");
         } else {

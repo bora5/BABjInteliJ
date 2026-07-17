@@ -34,7 +34,7 @@ public class ColumnNamesInspection extends AbstractBaseJavaLocalInspectionTool {
     public ProblemDescriptor @Nullable [] checkClass(@NotNull PsiClass aClass,
                                                       @NotNull InspectionManager manager,
                                                       boolean isOnTheFly) {
-        PsiClass entity = BabjPsi.typeArgument(aClass, GENERIC_VIEW, 0);
+        PsiClass entity = BABjPsi.typeArgument(aClass, GENERIC_VIEW, 0);
         if (entity == null) {
             return null;
         }
@@ -42,23 +42,23 @@ public class ColumnNamesInspection extends AbstractBaseJavaLocalInspectionTool {
         if (annotation == null) {
             return null;
         }
-        PsiLiteralExpression literal = BabjPsi.annotationStringLiteral(annotation);
-        String value = BabjPsi.stringValue(literal);
+        PsiLiteralExpression literal = BABjPsi.annotationStringLiteral(annotation);
+        String value = BABjPsi.stringValue(literal);
         if (value == null || value.isBlank()) {
             return null;
         }
 
-        PsiClass dto = BabjPsi.typeArgument(aClass, GENERIC_VIEW, 2);
+        PsiClass dto = BABjPsi.typeArgument(aClass, GENERIC_VIEW, 2);
         List<ProblemDescriptor> problems = new ArrayList<>();
 
-        for (String entry : BabjPsi.splitTopLevel(value)) {
+        for (String entry : BABjPsi.splitTopLevel(value)) {
             String[] parts = entry.split("~", -1);
             String prop = parts[0].trim();
             if (prop.startsWith("*")) {
                 prop = prop.substring(1);
             }
             if (!prop.isEmpty() && PATH.matcher(prop).matches()) {
-                String error = BabjPsi.validatePath(entity, prop.split("\\."), 0);
+                String error = BABjPsi.validatePath(entity, prop.split("\\."), 0);
                 if (error != null) {
                     problems.add(problem(manager, literal, isOnTheFly,
                             "@ColumnNames: kolona '" + prop + "' — " + error + "."));
@@ -66,7 +66,7 @@ public class ColumnNamesInspection extends AbstractBaseJavaLocalInspectionTool {
             }
 
             String key = parts.length > 1 ? parts[1].trim() : "";
-            if (dto != null && IDENT.matcher(key).matches() && BabjPsi.isMissingProperty(dto, key)) {
+            if (dto != null && IDENT.matcher(key).matches() && BABjPsi.isMissingProperty(dto, key)) {
                 problems.add(problem(manager, literal, isOnTheFly,
                         "@ColumnNames: ključ '" + key + "' nije podržan iz servisa (nema polja '"
                                 + key + "' u DTO " + dto.getName() + ")."));

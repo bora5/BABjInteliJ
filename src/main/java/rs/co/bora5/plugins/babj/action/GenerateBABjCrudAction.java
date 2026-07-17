@@ -69,7 +69,7 @@ public class GenerateBABjCrudAction extends AnAction {
         }
 
         EntityModel model = EntityModel.from(entityClass);
-        GenerateBabjCrudDialog dialog = new GenerateBabjCrudDialog(project, model);
+        GenerateBABjCrudDialog dialog = new GenerateBABjCrudDialog(project, model);
         if (!dialog.showAndGet()) {
             return;
         }

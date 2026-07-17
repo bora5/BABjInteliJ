@@ -1,8 +1,8 @@
-<templateSet group="babj">
+<templateSet group="BABj">
     <!-- GenericView skeleton -->
     <template name="bview"
               value="@EnableNew&#10;@EnableEdit&#10;@EnableDelete&#10;@AdminTypes(roles = Roles.$ROLE$)&#10;@ColumnNames(&quot;$COLS$&quot;)&#10;@PageTitle(&quot;$TITLE$&quot;)&#10;@Route(value = &quot;$ROUTE$&quot;, layout = MainView.class)&#10;@RouteScoped&#10;public class $NAME$View extends GenericView&lt;$ENTITY$, $ENTITY$Home, $ENTITY$DTO, Korisnik&gt; {&#10;&#10;&#9;@Serial&#10;&#9;private static final long serialVersionUID = 1L;&#10;&#10;&#9;$END$&#10;}"
-              description="babj GenericView (deklarativni grid)"
+              description="BABj GenericView (deklarativni grid)"
               toReformat="false" toShortenFQNames="true">
         <variable name="ENTITY" expression="" defaultValue="" alwaysStopAt="true"/>
         <variable name="NAME" expression="complete()" defaultValue="" alwaysStopAt="true"/>
@@ -18,7 +18,7 @@
     <!-- GenericWindow skeleton -->
     <template name="bwin"
               value="@Dependent&#10;@Primary&#10;public class Edit$ENTITY$Window extends GenericWindow&lt;$ENTITY$, $ENTITY$Home, $ENTITY$DTO, Korisnik&gt; {&#10;&#10;&#9;@Serial&#10;&#9;private static final long serialVersionUID = 1L;&#10;&#10;&#9;@Override&#10;&#9;public void createContent(VerticalLayout vl) {&#10;&#9;&#9;$END$&#10;&#9;}&#10;}"
-              description="babj GenericWindow (edit prozor)"
+              description="BABj GenericWindow (edit prozor)"
               toReformat="false" toShortenFQNames="true">
         <variable name="ENTITY" expression="" defaultValue="" alwaysStopAt="true"/>
         <context>
@@ -29,7 +29,7 @@
     <!-- AbstractHome skeleton -->
     <template name="bhome"
               value="@Stateless&#10;@LocalBean&#10;@Primary&#10;public class $ENTITY$Home extends AbstractHome&lt;$ENTITY$, $ENTITY$DTO&gt; {&#10;&#10;&#9;@Serial&#10;&#9;private static final long serialVersionUID = 1L;&#10;&#10;&#9;public $ENTITY$Home() {&#10;&#9;&#9;super($ENTITY$.class, $ENTITY$DTO.class);&#10;&#9;}&#10;&#10;&#9;@Override&#10;&#9;public String getSelect() {&#10;&#9;&#9;return super.getSelect() + &quot;(x.id, $SELECT$)&quot;;&#10;&#9;}&#10;&#10;&#9;@Override&#10;&#9;public String getJoin() {&#10;&#9;&#9;return &quot; $JOIN$&quot;;&#10;&#9;}&#10;&#10;&#9;$END$&#10;}"
-              description="babj AbstractHome (EJB servis)"
+              description="BABj AbstractHome (EJB servis)"
               toReformat="false" toShortenFQNames="true">
         <variable name="ENTITY" expression="" defaultValue="" alwaysStopAt="true"/>
         <variable name="SELECT" expression="" defaultValue="" alwaysStopAt="true"/>
@@ -42,7 +42,7 @@
     <!-- AbstractDTO skeleton -->
     <template name="bdto"
               value="public class $ENTITY$DTO extends AbstractDTO&lt;$ENTITY$&gt; {&#10;&#10;&#9;@Serial&#10;&#9;private static final long serialVersionUID = 1L;&#10;&#10;&#9;$END$&#10;&#10;&#9;public $ENTITY$DTO(Long id) {&#10;&#9;&#9;this.setId(id);&#10;&#9;}&#10;}"
-              description="babj AbstractDTO (projekcija)"
+              description="BABj AbstractDTO (projekcija)"
               toReformat="false" toShortenFQNames="true">
         <variable name="ENTITY" expression="" defaultValue="" alwaysStopAt="true"/>
         <context>

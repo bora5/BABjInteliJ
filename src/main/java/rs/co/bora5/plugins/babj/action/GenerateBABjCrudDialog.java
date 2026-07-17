@@ -20,7 +20,7 @@ import rs.co.bora5.plugins.babj.model.OperaterTypeResolver;
  * Configuration dialog for the babj CRUD generator. Pre-fills every field from the selected entity
  * and the observed package layout, so the common case is just pressing OK.
  */
-public class GenerateBabjCrudDialog extends DialogWrapper {
+public class GenerateBABjCrudDialog extends DialogWrapper {
 
     private final EntityModel model;
 
@@ -36,7 +36,7 @@ public class GenerateBabjCrudDialog extends DialogWrapper {
     private final JBCheckBox viewCheck = new JBCheckBox("View (grid)", true);
     private final JBCheckBox windowCheck = new JBCheckBox("EditWindow (prozor)", true);
 
-    public GenerateBabjCrudDialog(@Nullable Project project, EntityModel model) {
+    public GenerateBABjCrudDialog(@Nullable Project project, EntityModel model) {
         super(project);
         this.model = model;
 

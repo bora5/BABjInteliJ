@@ -24,9 +24,9 @@ import rs.co.bora5.plugins.babj.model.BABjNaming;
  * checking entity properties (fields <i>or</i> getters), extracting string literals from a method,
  * and splitting a projection/column string at top level.
  */
-final class BabjPsi {
+final class BABjPsi {
 
-    private BabjPsi() {
+    private BABjPsi() {
     }
 
     /**

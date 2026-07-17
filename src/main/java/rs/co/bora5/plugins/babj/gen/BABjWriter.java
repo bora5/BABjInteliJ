@@ -12,9 +12,9 @@ import com.intellij.psi.PsiManager;
  * Creates Java source files inside a project's source root, materialising the target package as
  * directories when they do not yet exist. Must be called inside a write action.
  */
-public final class BabjWriter {
+public final class BABjWriter {
 
-    private BabjWriter() {
+    private BABjWriter() {
     }
 
     /**

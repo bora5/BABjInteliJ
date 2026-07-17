@@ -32,25 +32,25 @@ public class HomeSelectInspection extends AbstractBaseJavaLocalInspectionTool {
     public ProblemDescriptor @Nullable [] checkClass(@NotNull PsiClass aClass,
                                                       @NotNull InspectionManager manager,
                                                       boolean isOnTheFly) {
-        PsiClass entity = BabjPsi.typeArgument(aClass, ABSTRACT_HOME, 0);
+        PsiClass entity = BABjPsi.typeArgument(aClass, ABSTRACT_HOME, 0);
         if (entity == null) {
             return null;
         }
 
         PsiLiteralExpression selectLiteral =
-                BabjPsi.firstLiteralContaining(BabjPsi.declaredMethod(aClass, "getSelect"));
-        String select = BabjPsi.stringValue(selectLiteral);
+                BABjPsi.firstLiteralContaining(BABjPsi.declaredMethod(aClass, "getSelect"));
+        String select = BABjPsi.stringValue(selectLiteral);
         if (select == null) {
             return null;
         }
 
-        String joinClause = BabjPsi.stringValue(BabjPsi.firstLiteral(BabjPsi.declaredMethod(aClass, "getJoin")));
+        String joinClause = BABjPsi.stringValue(BABjPsi.firstLiteral(BABjPsi.declaredMethod(aClass, "getJoin")));
         AliasResolver aliases = new AliasResolver(entity, joinClause);
 
         String cols = stripOuterParens(select);
         List<ProblemDescriptor> problems = new ArrayList<>();
 
-        for (String rawToken : BabjPsi.splitTopLevel(cols)) {
+        for (String rawToken : BABjPsi.splitTopLevel(cols)) {
             String token = rawToken.trim();
             if (!DOTTED_PATH.matcher(token).matches()) {
                 continue; // function call, literal, or a plain identifier — not a field path
@@ -64,7 +64,7 @@ public class HomeSelectInspection extends AbstractBaseJavaLocalInspectionTool {
                         (LocalQuickFix) null, ProblemHighlightType.WARNING, isOnTheFly));
                 continue;
             }
-            String error = BabjPsi.validatePath(aliases.classOf(alias), segs, 1);
+            String error = BABjPsi.validatePath(aliases.classOf(alias), segs, 1);
             if (error != null) {
                 problems.add(manager.createProblemDescriptor(selectLiteral,
                         "getSelect: u '" + token + "' — " + error + ".",
