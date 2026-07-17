@@ -61,11 +61,10 @@ Distribucija: `.zip` iz `build/distributions/` se instalira preko
 
 ## Zahtevi
 
-- Build cilja IntelliJ IDEA **Community 2026.2** (build 262); plugin se instalira i radi i u
-  **Ultimate**-u (koristi samo core + Java PSI).
-- Učitava se od build-a **262** naviše, bez gornje granice.
-- Build na **JDK 25** (2026.2 platforma je kompajlirana za Javu 25; Gradle ga sam povlači preko
-  foojay resolver-a). Koristi samo stabilne Java PSI API-je (nema tvrde zavisnosti na Ultimate-only module).
+- Build cilja IntelliJ IDEA **Community 2024.3** (stabilno izdanje, gradi se na JDK 21).
+- Učitava se od build-a **243** naviše, bez gornje granice — koristi samo stabilne Java PSI API-je,
+  pa se instalira i radi i u aktuelnom **2026.2 / Ultimate**-u.
+- Build na **JDK 21**.
 
 ## Struktura
 

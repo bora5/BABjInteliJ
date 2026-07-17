@@ -10,28 +10,27 @@ version = providers.gradleProperty("version").get()
 
 dependencies {
     intellijPlatform {
-        // Community 2026.2: the plugin uses only core + Java PSI APIs, so it installs and runs in
-        // Ultimate too, while keeping the runIde sandbox clean. (The IntelliJ JPA persistence-model
-        // API is Ultimate-internal/undocumented and gives negligible benefit for entities without
-        // embeddables, so it is intentionally not used.)
-        intellijIdeaCommunity("2026.2")
+        // Build against Community 2024.3 (a stable release that resolves and runs on JDK 21). The
+        // plugin uses only stable core + Java PSI APIs, so — with no untilBuild cap — it loads on
+        // current IDEs (2026.2 / build 262) and in Ultimate. Community 2026.2 is intentionally not
+        // used: it does not resolve under this version string (still EAP-only for IC) and would
+        // force a JDK 25 toolchain for no benefit.
+        intellijIdeaCommunity("2024.3")
         bundledPlugin("com.intellij.java")
     }
 }
 
 java {
     toolchain {
-        // IntelliJ 2026.2 platform jars are compiled for Java 25 (class file 69), so the plugin
-        // must be built with JDK 25 (Gradle auto-provisions it via the foojay resolver).
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            // Java-25 bytecode won't load on older IDEs (JBR 21), so require 2026.2 (build 262)+.
-            sinceBuild = "262"
+            sinceBuild = "243"
+            // No upper bound: only stable APIs are used, so it loads on 2026.2 (262) and later.
             untilBuild = provider { null }
         }
     }
