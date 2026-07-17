@@ -26,6 +26,23 @@
         </ul>
         ]]></description>
 
+    <change-notes><![CDATA[
+        <h3>1.4.0</h3>
+        <ul>
+          <li><b>Safer project scanning</b> — BABj Navigator and Agent Studio now scan in
+              non-blocking background read actions, preventing UI freezes and PSI read-access
+              errors.</li>
+          <li><b>Clearer generator layout</b> — the generator is organized into Artifacts,
+              CRUD Designer, Additional generators, and Agent tabs.</li>
+          <li><b>Controlled regeneration</b> — existing files can be recreated when explicitly
+              enabled and confirmed; the default behavior still preserves them.</li>
+          <li><b>Improved ColumnNames support</b> — optional filtering and sorting boolean flags
+              are accepted and validated.</li>
+          <li><b>Focused feature set</b> — the project-specific settings-administration generator
+              has been removed.</li>
+        </ul>
+        ]]></change-notes>
+
     <!-- Java PSI is the only dependency; the plugin runs on Community and Ultimate alike. -->
     <depends>com.intellij.java</depends>
 

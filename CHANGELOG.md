@@ -4,6 +4,21 @@
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-07-18
+
+### Added
+
+- Existing generated files can now be recreated through an explicit opt-in followed by a warning
+  confirmation. Newly created, recreated, and skipped files are reported separately.
+
+### Changed
+
+- Reorganized the generator into **Artifacts**, **CRUD Designer**, **Additional generators**, and
+  **Agent** tabs.
+- `@ColumnNames` inspection now accepts and validates optional `filterEnabled` and
+  `sortingEnabled` boolean flags.
+- Removed the project-specific settings-administration generator.
+
 ### Fixed
 
 - Agent Studio and BABj Navigator now scan PSI in non-blocking read actions instead of directly on
@@ -11,6 +26,8 @@
   exceptions and avoiding UI freezes on larger projects.
 - Tool-window tree rendering uses immutable scan snapshots; PSI is resolved only inside guarded
   read actions when the user navigates to source.
+
+## [1.3.1] - 2026-07-17
 
 ### Changed
 
