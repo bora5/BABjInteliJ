@@ -34,15 +34,27 @@ subclasses of `AbstractRoles`, collects all inherited and locally declared `publ
 String` constants, and supports selecting multiple roles for `@AdminTypes`.
 
 **Run it:** place the caret in an entity, press `Alt+Insert` (Generate), and select
-**BABj CRUD (DTO, Home, View, Window)**. The dialog pre-fills the base package, operator choices,
+**BABj Code Generator**. The dialog pre-fills the base package, operator choices,
 roles registry, role choices, view class name, route, and title, and lets you choose which artifacts
 to generate. Existing files are never overwritten.
 
-### 2. Live templates
+The **CRUD Designer** tab lets you include/exclude and reorder fields, override the inferred Vaadin
+editor, and preview the resulting `@ColumnNames` projection and edit form. The same field model is
+used by every generated CRUD artifact.
+
+### 2. Extended generators
+
+- A REST endpoint extending `AbstractEndpoint`, enabled only when the selected entity implements
+  `RestPublicIdEntityInterface`; its generated Home receives `RestPublicIdHomeInterface`.
+- CSV and Excel import-window scaffolds with BABj's upload base classes.
+- A `GenericReportWindow` scaffold with lifecycle hooks for print, e-mail, or Excel output.
+- Optional `@EnableExport` support on generated views.
+
+### 3. Live templates
 
 `bview`, `bwin`, `bhome`, and `bdto` provide quick skeletons for individual BABj classes.
 
-### 3. Inspections
+### 4. Inspections
 
 - **Missing Edit window** reports a `GenericView` without its conventional
   `Edit<Entity>Window` and provides an `Alt+Enter` quick fix to generate it.
@@ -54,26 +66,33 @@ to generate. Existing files are never overwritten.
 - **Annotation property validation** checks entity-property references in filters, field-visibility,
   status, uniqueness, and `@PropertyId` bindings.
 
-### 4. BABj Navigator
+### 5. BABj Navigator
 
 Recognized Entity, DTO, Home, View, and EditWindow classes have a BABj gutter icon. Clicking the
 icon lists every artifact in the same module and opens the selected class. The **BABj Navigator**
 tool window shows the complete module chain, including missing artifacts, and supports double-click
 navigation.
 
-### 5. Smart annotation completion
+### 6. Smart annotation completion
 
 Code completion inside BABj annotation strings suggests valid entity properties and one-level
 association paths. `@ColumnNames` completion inserts complete `property~key~Label` definitions.
 Completion is also available for `@AddCondition`, `@AdminVisibleFields`, `@EnabledForStatus`,
 `@SqlFieldName`, `@PropertyId`, and `@SingleUniqueField` property attributes.
 
+### 7. BABj Agent Studio
+
+The **BABj Agent Studio** tool window scans project implementations of `Agent`, extracts event types
+referenced by `supports(...)`, and shows statically referenced `SafetyCriterion` and `AgentAction`
+types. Select an event to see which agents can react, and double-click a node to open its source.
+This is a static simulation: it does not instantiate agents or execute application code.
+
 ## Roadmap
 
-- visual CRUD designer with a View/EditWindow preview
-- REST endpoint generator based on `AbstractEndpoint`
-- Agent Studio for visualizing and simulating event → agent → criterion → action flows
-- generators for import/export, reports, attachments, messaging, and administration modules
+- attachment module assistance based on BABj attachment entity/view interfaces
+- messaging scaffolds for e-mail, SMS, and agent messages
+- administration-specific generators and inspections
+- runtime Agent Studio tracing in addition to the current static simulator
 
 ## Build and run
 
@@ -97,6 +116,7 @@ Install the ZIP from `build/distributions/` using
 ```text
 src/main/java/rs/co/bora5/plugins/babj/
 ├── action/        GenerateBABjCrudAction and configuration dialog
+├── agent/         Agent Studio topology browser and static simulator
 ├── completion/    context-aware BABj annotation completion
 ├── gen/           CodeTemplates renderer and file generator
 ├── inspection/    BABj inspections and quick fixes

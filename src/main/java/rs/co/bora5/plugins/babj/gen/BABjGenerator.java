@@ -48,6 +48,28 @@ public final class BABjGenerator {
                     CodeTemplates.window(ctx), created, skipped);
             toOpen = firstNonNull(toOpen, f);
         }
+        if (ctx.isGenerateRest()) {
+            PsiFile f = write(project, sourceRoot, ctx.restPackage(), entity + "Endpoint.java",
+                    CodeTemplates.restEndpoint(ctx), created, skipped);
+            toOpen = firstNonNull(toOpen, f);
+        }
+        if (ctx.isGenerateCsvImport()) {
+            PsiFile f = write(project, sourceRoot, ctx.windowPackage(),
+                    "Import" + entity + "CsvWindow.java",
+                    CodeTemplates.csvImport(ctx), created, skipped);
+            toOpen = firstNonNull(toOpen, f);
+        }
+        if (ctx.isGenerateXlsImport()) {
+            PsiFile f = write(project, sourceRoot, ctx.windowPackage(),
+                    "Import" + entity + "XlsWindow.java",
+                    CodeTemplates.xlsImport(ctx), created, skipped);
+            toOpen = firstNonNull(toOpen, f);
+        }
+        if (ctx.isGenerateReport()) {
+            PsiFile f = write(project, sourceRoot, ctx.windowPackage(), entity + "ReportWindow.java",
+                    CodeTemplates.report(ctx), created, skipped);
+            toOpen = firstNonNull(toOpen, f);
+        }
 
         return new Result(created, skipped, toOpen);
     }

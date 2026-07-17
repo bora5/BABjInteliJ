@@ -72,7 +72,8 @@ public class CreateEditWindowQuickFix implements LocalQuickFix {
                 base, model.getSimpleName(), OperaterTypeResolver.resolve(project), "", "", java.util.List.of(),
                 model.getSimpleName() + "View", BABjNaming.decapitalize(model.getSimpleName()) + "View",
                 BABjNaming.label(model.getSimpleName()), model.getFields(),
-                false, false, false, true);
+                false, false, false, true,
+                false, false, "", false, false, false);
 
         BABjGenerator.generate(project, sourceRoot, ctx);
     }
