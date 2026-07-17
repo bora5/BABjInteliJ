@@ -1,8 +1,0 @@
-<!--
-  Optional config loaded only when the JPA plugin (com.intellij.javaee.jpa) is present.
-  Placeholder for now: the JPA-model-backed scanning is wired here once its (undocumented,
-  Ultimate-internal) API is pinned down against a real IDE build. Empty until then, so the core
-  plugin builds and loads unchanged.
--->
-<idea-plugin>
-</idea-plugin>

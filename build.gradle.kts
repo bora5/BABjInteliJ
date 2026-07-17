@@ -10,12 +10,12 @@ version = providers.gradleProperty("version").get()
 
 dependencies {
     intellijPlatform {
-        // Ultimate is required for the JPA plugin (com.intellij.javaee.jpa), whose persistence
-        // model powers the optional JPA-aware entity scanning. The JPA dependency is declared
-        // optional in plugin.xml, so the plugin still loads (with PSI-only scanning) without it.
-        intellijIdeaUltimate("2026.2")
+        // Community 2026.2: the plugin uses only core + Java PSI APIs, so it installs and runs in
+        // Ultimate too, while keeping the runIde sandbox clean. (The IntelliJ JPA persistence-model
+        // API is Ultimate-internal/undocumented and gives negligible benefit for entities without
+        // embeddables, so it is intentionally not used.)
+        intellijIdeaCommunity("2026.2")
         bundledPlugin("com.intellij.java")
-        bundledPlugin("com.intellij.javaee.jpa")
     }
 }
 
