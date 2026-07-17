@@ -157,6 +157,7 @@ Expected:
 - `<Entity>MessagingAgent` is an `@ApplicationScoped` `AbstractAgent`;
 - Agent Studio shows it as reacting to `EntityEvent`;
 - the generated handler broadcasts an `EntityLifecycleMessage` containing event type and entity id.
+- repeated scans complete without EDT/read-action exceptions and do not freeze the IDE UI.
 
 Runtime check: register a small receiver agent supporting `AgentMessageEvent`, fire
 `new EntityEvent("UPDATE", entity)` through `AgentContext`/the runtime manager, and verify that the
@@ -233,6 +234,7 @@ Expected: the matching BABj class skeleton is inserted and template variables ar
 
 Expected: the module graph shows found and missing artifacts, navigation opens source, and the code
 generator remains available in all supported action contexts while a Java editor is active.
+Repeated refreshes must complete without EDT/read-action exceptions or blocking the IDE UI.
 
 ## 16. Release verification
 

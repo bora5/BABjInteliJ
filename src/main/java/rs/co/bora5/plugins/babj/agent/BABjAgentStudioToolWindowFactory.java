@@ -7,8 +7,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -21,12 +23,15 @@ import javax.swing.tree.TreePath;
 import org.jetbrains.annotations.NotNull;
 
 import com.intellij.ide.util.PsiNavigationSupport;
+import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
@@ -45,6 +50,7 @@ import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.tree.TreeUtil;
+import com.intellij.util.concurrency.AppExecutorUtil;
 
 /** Static BAB agent topology browser and event-routing simulator. */
 public class BABjAgentStudioToolWindowFactory implements ToolWindowFactory, DumbAware {
@@ -108,34 +114,69 @@ public class BABjAgentStudioToolWindowFactory implements ToolWindowFactory, Dumb
                 status.setText("Agent Studio is available after indexing.");
                 return;
             }
+            status.setText("Scanning BABj agent topology…");
+            ReadAction.nonBlocking(this::scanProject)
+                    .inSmartMode(project)
+                    .expireWith(project)
+                    .coalesceBy(this)
+                    .finishOnUiThread(ModalityState.any(), this::applyScanResult)
+                    .submit(AppExecutorUtil.getAppExecutorService());
+        }
+
+        private ScanResult scanProject() {
             PsiClass agentContract = find(AGENT, GlobalSearchScope.allScope(project));
             PsiClass eventContract = find(EVENT, GlobalSearchScope.allScope(project));
             if (agentContract == null || eventContract == null) {
-                status.setText("BAB agent API was not found in this project.");
-                tree.setModel(new DefaultTreeModel(new DefaultMutableTreeNode("BAB dependency not found")));
-                return;
+                return ScanResult.apiMissing();
             }
 
             List<PsiClass> eventTypes = concreteInheritors(
                     eventContract, GlobalSearchScope.allScope(project));
-            eventCombo.setModel(new DefaultComboBoxModel<>(eventTypes.stream()
+            List<EventOption> events = eventTypes.stream()
                     .map(type -> new EventOption(type.getName(), type.getQualifiedName()))
-                    .toArray(EventOption[]::new)));
-
-            agents = concreteInheritors(agentContract, GlobalSearchScope.projectScope(project)).stream()
-                    .map(this::describe)
                     .toList();
+
+            List<AgentDescriptor> discoveredAgents = concreteInheritors(
+                    agentContract, GlobalSearchScope.projectScope(project)).stream()
+                    .map(agent -> describe(agent, eventTypes))
+                    .toList();
+            return new ScanResult(true, events, discoveredAgents);
+        }
+
+        private void applyScanResult(ScanResult result) {
+            if (!result.apiAvailable()) {
+                agents = List.of();
+                eventCombo.setModel(new DefaultComboBoxModel<>());
+                status.setText("BAB agent API was not found in this project.");
+                tree.setModel(new DefaultTreeModel(
+                        new DefaultMutableTreeNode("BAB dependency not found")));
+                return;
+            }
+            eventCombo.setModel(new DefaultComboBoxModel<>(
+                    result.events().toArray(EventOption[]::new)));
+            agents = result.agents();
             render(false);
         }
 
-        private AgentDescriptor describe(PsiClass agent) {
+        private AgentDescriptor describe(PsiClass agent, List<PsiClass> eventTypes) {
             List<PsiClass> events = new ArrayList<>();
             for (PsiMethod method : agent.findMethodsByName("supports", false)) {
                 events.addAll(referencedTypes(method, EVENT));
             }
-            return new AgentDescriptor(pointer(agent), distinct(events),
+            List<TypeDescriptor> supportedTypes = distinct(events);
+            Set<String> matchingEvents = new LinkedHashSet<>();
+            for (PsiClass eventType : eventTypes) {
+                for (PsiClass supportedType : events) {
+                    if (eventType.isEquivalentTo(supportedType)
+                            || InheritanceUtil.isInheritorOrSelf(eventType, supportedType, true)) {
+                        matchingEvents.add(eventType.getQualifiedName());
+                        break;
+                    }
+                }
+            }
+            return new AgentDescriptor(descriptor(agent), supportedTypes,
                     distinct(referencedTypes(agent, CRITERION)),
-                    distinct(referencedTypes(agent, ACTION)));
+                    distinct(referencedTypes(agent, ACTION)), Set.copyOf(matchingEvents));
         }
 
         private void render(boolean simulation) {
@@ -144,18 +185,14 @@ public class BABjAgentStudioToolWindowFactory implements ToolWindowFactory, Dumb
                     new StudioNode("BABj agents (" + agents.size() + ")", null));
             int matches = 0;
             for (AgentDescriptor agent : agents) {
-                PsiClass agentClass = agent.agent().getElement();
-                if (agentClass == null) {
-                    continue;
-                }
-                boolean reacts = event != null && agent.supports().stream()
-                        .anyMatch(type -> supports(type, event.qualifiedName()));
+                boolean reacts = event != null
+                        && agent.matchingEvents().contains(event.qualifiedName());
                 if (reacts) {
                     matches++;
                 }
                 String prefix = event == null ? "" : reacts ? "✓ reacts — " : "○ ignores — ";
                 DefaultMutableTreeNode agentNode = new DefaultMutableTreeNode(
-                        new StudioNode(prefix + agentClass.getName(), agent.agent()));
+                        new StudioNode(prefix + agent.agent().name(), agent.agent().target()));
                 agentNode.add(group("Events", agent.supports()));
                 agentNode.add(group("Safety criteria", agent.criteria()));
                 agentNode.add(group("Actions", agent.actions()));
@@ -169,27 +206,17 @@ public class BABjAgentStudioToolWindowFactory implements ToolWindowFactory, Dumb
         }
 
         private DefaultMutableTreeNode group(String name,
-                                             List<SmartPsiElementPointer<PsiClass>> types) {
+                                             List<TypeDescriptor> types) {
             DefaultMutableTreeNode group = new DefaultMutableTreeNode(
                     new StudioNode(name + " (" + types.size() + ")", null));
-            for (SmartPsiElementPointer<PsiClass> type : types) {
-                PsiClass psiClass = type.getElement();
-                if (psiClass != null) {
-                    group.add(new DefaultMutableTreeNode(new StudioNode(psiClass.getName(), type)));
-                }
+            for (TypeDescriptor type : types) {
+                group.add(new DefaultMutableTreeNode(
+                        new StudioNode(type.name(), type.target())));
             }
             if (types.isEmpty()) {
                 group.add(new DefaultMutableTreeNode(new StudioNode("No static reference found", null)));
             }
             return group;
-        }
-
-        private boolean supports(SmartPsiElementPointer<PsiClass> supported, String selectedFqn) {
-            PsiClass supportedClass = supported.getElement();
-            PsiClass selectedClass = find(selectedFqn, GlobalSearchScope.allScope(project));
-            return supportedClass != null && selectedClass != null
-                    && (supportedClass.isEquivalentTo(selectedClass)
-                    || InheritanceUtil.isInheritorOrSelf(selectedClass, supportedClass, true));
         }
 
         private List<PsiClass> referencedTypes(PsiElement root, String contractFqn) {
@@ -219,14 +246,19 @@ public class BABjAgentStudioToolWindowFactory implements ToolWindowFactory, Dumb
                     .toList();
         }
 
-        private List<SmartPsiElementPointer<PsiClass>> distinct(List<PsiClass> classes) {
-            Map<String, SmartPsiElementPointer<PsiClass>> result = new LinkedHashMap<>();
+        private List<TypeDescriptor> distinct(List<PsiClass> classes) {
+            Map<String, TypeDescriptor> result = new LinkedHashMap<>();
             for (PsiClass psiClass : classes) {
                 if (psiClass.getQualifiedName() != null) {
-                    result.put(psiClass.getQualifiedName(), pointer(psiClass));
+                    result.put(psiClass.getQualifiedName(), descriptor(psiClass));
                 }
             }
             return List.copyOf(result.values());
+        }
+
+        private TypeDescriptor descriptor(PsiClass psiClass) {
+            return new TypeDescriptor(psiClass.getName(), psiClass.getQualifiedName(),
+                    pointer(psiClass));
         }
 
         private SmartPsiElementPointer<PsiClass> pointer(PsiClass psiClass) {
@@ -245,20 +277,37 @@ public class BABjAgentStudioToolWindowFactory implements ToolWindowFactory, Dumb
                     || studioNode.target() == null) {
                 return;
             }
-            PsiClass target = studioNode.target().getElement();
-            if (target != null && target.getContainingFile() != null
-                    && target.getContainingFile().getVirtualFile() != null) {
+            NavigationTarget navigation = ReadAction.compute(() -> {
+                PsiClass target = studioNode.target().getElement();
+                if (target == null || target.getContainingFile() == null
+                        || target.getContainingFile().getVirtualFile() == null) {
+                    return null;
+                }
+                return new NavigationTarget(target.getContainingFile().getVirtualFile(),
+                        target.getTextOffset());
+            });
+            if (navigation != null) {
                 PsiNavigationSupport.getInstance().createNavigatable(project,
-                        target.getContainingFile().getVirtualFile(), target.getTextOffset())
+                        navigation.file(), navigation.offset())
                         .navigate(true);
             }
         }
     }
 
-    private record AgentDescriptor(SmartPsiElementPointer<PsiClass> agent,
-                                   List<SmartPsiElementPointer<PsiClass>> supports,
-                                   List<SmartPsiElementPointer<PsiClass>> criteria,
-                                   List<SmartPsiElementPointer<PsiClass>> actions) {
+    private record ScanResult(boolean apiAvailable, List<EventOption> events,
+                              List<AgentDescriptor> agents) {
+        private static ScanResult apiMissing() {
+            return new ScanResult(false, List.of(), List.of());
+        }
+    }
+
+    private record AgentDescriptor(TypeDescriptor agent, List<TypeDescriptor> supports,
+                                   List<TypeDescriptor> criteria, List<TypeDescriptor> actions,
+                                   Set<String> matchingEvents) {
+    }
+
+    private record TypeDescriptor(String name, String qualifiedName,
+                                  SmartPsiElementPointer<PsiClass> target) {
     }
 
     private record EventOption(String name, String qualifiedName) {
@@ -273,5 +322,8 @@ public class BABjAgentStudioToolWindowFactory implements ToolWindowFactory, Dumb
         public String toString() {
             return label;
         }
+    }
+
+    private record NavigationTarget(VirtualFile file, int offset) {
     }
 }
