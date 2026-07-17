@@ -18,10 +18,14 @@ paketima, po istim konvencijama koje se vide u `wastex` kodu:
 | `Edit<Entity>Window` | `…front.windowses` | `GenericWindow` sa `@PropertyId` poljima i combo-box factory pozivima |
 
 Generator prepoznaje tipove polja i mapira ih:
-- `@ManyToOne` / `@OneToOne` → `LEFT JOIN`, projekcija `alias.naziv`, `createSimpleComboBox(...)` u prozoru;
+- `@ManyToOne` / `@OneToOne` → `LEFT JOIN`, projekcija `alias.<display>`, `createSimpleComboBox(...)` u prozoru.
+  Display polje se **skenira sa ciljanog entiteta** (prednost `naziv`, pa `username`, pa prvo `String` polje);
 - `enum` → `ComboBox` napunjen iz `values()`;
 - `LocalDate/LocalDateTime/LocalTime`, brojevi, `boolean`, `String` → odgovarajuće Vaadin polje;
 - kolekcije (`@OneToMany`/`@ManyToMany`) se preskaču.
+
+Operater (`K`) tip se auto-detektuje skeniranjem projekta za implementaciju
+`OperaterEntityInterface` (npr. `Korisnik`) i prefiluje u dijalogu.
 
 **Pokretanje:** kursor u entitetu → `Alt+Insert` (Generate) → **babj CRUD (DTO, Home, View, Window)**.
 Otvori se dijalog sa unapred popunjenim parametrima (osnovni paket, `K` tip, rola,
@@ -50,7 +54,9 @@ Distribucija: `.zip` iz `build/distributions/` se instalira preko
 
 ## Zahtevi
 
-- Cilja IntelliJ **2024.3+** (Community Edition je dovoljan — koristi se samo Java PSI).
+- Build cilja IntelliJ IDEA **Ultimate 2026.2** (build 262).
+- Učitava se od build-a **243** naviše, bez gornje granice (koristi samo stabilne Java PSI API-je,
+  pa nema tvrde zavisnosti na Ultimate-only module).
 - Build na JDK **21**.
 
 ## Struktura

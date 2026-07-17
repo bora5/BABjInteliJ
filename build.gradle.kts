@@ -13,8 +13,10 @@ version = providers.gradleProperty("version").get()
 
 dependencies {
     intellijPlatform {
-        // 2024.3 runs on JDK 21. Community Edition is enough — we only use Java PSI.
-        intellijIdeaCommunity("2024.3")
+        // Target IntelliJ IDEA Ultimate 2026.2 (build 262), matching the developer's IDE.
+        // If this fails to resolve (e.g. still EAP-only), pin the exact build instead:
+        //   create("IU", "262.8665.258")
+        intellijIdeaUltimate("2026.2")
         bundledPlugin("com.intellij.java")
     }
 }

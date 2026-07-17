@@ -17,6 +17,7 @@ import rs.co.bora5.plugins.babj.gen.BabjGenerator;
 import rs.co.bora5.plugins.babj.model.BabjNaming;
 import rs.co.bora5.plugins.babj.model.EntityModel;
 import rs.co.bora5.plugins.babj.model.GenerationContext;
+import rs.co.bora5.plugins.babj.model.OperaterTypeResolver;
 
 /**
  * Quick fix that generates the missing {@code Edit<Entity>Window} for a {@code GenericView}.
@@ -68,7 +69,7 @@ public class CreateEditWindowQuickFix implements LocalQuickFix {
         EntityModel model = EntityModel.from(entity);
         String base = BabjNaming.basePackage(model.getPackageName());
         GenerationContext ctx = new GenerationContext(
-                base, model.getSimpleName(), "Korisnik", "ADMIN",
+                base, model.getSimpleName(), OperaterTypeResolver.resolve(project), "ADMIN",
                 model.getSimpleName() + "View", BabjNaming.decapitalize(model.getSimpleName()) + "View",
                 BabjNaming.label(model.getSimpleName()), model.getFields(),
                 false, false, false, true);

@@ -14,6 +14,7 @@ import com.intellij.util.ui.FormBuilder;
 import rs.co.bora5.plugins.babj.model.BabjNaming;
 import rs.co.bora5.plugins.babj.model.EntityModel;
 import rs.co.bora5.plugins.babj.model.GenerationContext;
+import rs.co.bora5.plugins.babj.model.OperaterTypeResolver;
 
 /**
  * Configuration dialog for the babj CRUD generator. Pre-fills every field from the selected entity
@@ -41,7 +42,7 @@ public class GenerateBabjCrudDialog extends DialogWrapper {
 
         String entity = model.getSimpleName();
         basePackageField = new JBTextField(BabjNaming.basePackage(model.getPackageName()));
-        kTypeField = new JBTextField("Korisnik");
+        kTypeField = new JBTextField(OperaterTypeResolver.resolve(project));
         roleField = new JBTextField("ADMIN");
         viewNameField = new JBTextField(entity + "View");
         routeField = new JBTextField(BabjNaming.decapitalize(entity) + "View");
