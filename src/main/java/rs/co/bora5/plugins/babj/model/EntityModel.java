@@ -14,7 +14,7 @@ import com.intellij.psi.util.PsiUtil;
 
 /**
  * Parses a JPA entity {@link PsiClass} into the metadata the generator needs: its name, package and
- * the list of generatable {@link BabjField properties} (scalars, enums and single-valued
+ * the list of generatable {@link BABjField properties} (scalars, enums and single-valued
  * associations; collections are skipped).
  */
 public final class EntityModel {
@@ -31,9 +31,9 @@ public final class EntityModel {
 
     private final String simpleName;
     private final String packageName;
-    private final List<BabjField> fields;
+    private final List<BABjField> fields;
 
-    private EntityModel(String simpleName, String packageName, List<BabjField> fields) {
+    private EntityModel(String simpleName, String packageName, List<BABjField> fields) {
         this.simpleName = simpleName;
         this.packageName = packageName;
         this.fields = fields;
@@ -47,7 +47,7 @@ public final class EntityModel {
         return packageName;
     }
 
-    public List<BabjField> getFields() {
+    public List<BABjField> getFields() {
         return fields;
     }
 
@@ -69,7 +69,7 @@ public final class EntityModel {
 
     public static EntityModel from(PsiClass psiClass) {
         String pkg = psiClass.getContainingFile() instanceof PsiJavaFile jf ? jf.getPackageName() : "";
-        List<BabjField> fields = new ArrayList<>();
+        List<BABjField> fields = new ArrayList<>();
 
         for (PsiField field : psiClass.getFields()) {
             if (field.hasModifierProperty(PsiModifier.STATIC)) {
@@ -88,17 +88,17 @@ public final class EntityModel {
                 PsiClass tc = PsiUtil.resolveClassInClassTypeOnly(type);
                 String simple = tc != null ? tc.getName() : type.getPresentableText();
                 String fqn = tc != null ? tc.getQualifiedName() : null;
-                fields.add(new BabjField(name, BabjField.Kind.ASSOCIATION, simple, fqn, pickDisplayProperty(tc)));
+                fields.add(new BABjField(name, BABjField.Kind.ASSOCIATION, simple, fqn, pickDisplayProperty(tc)));
                 continue;
             }
 
             PsiClass tc = PsiUtil.resolveClassInClassTypeOnly(type);
             if (tc != null && tc.isEnum()) {
-                fields.add(new BabjField(name, BabjField.Kind.ENUM, tc.getName(), tc.getQualifiedName(), null));
+                fields.add(new BABjField(name, BABjField.Kind.ENUM, tc.getName(), tc.getQualifiedName(), null));
                 continue;
             }
 
-            fields.add(new BabjField(name, BabjField.Kind.SIMPLE, simpleTypeName(type, tc), importFqn(type, tc), null));
+            fields.add(new BABjField(name, BABjField.Kind.SIMPLE, simpleTypeName(type, tc), importFqn(type, tc), null));
         }
 
         return new EntityModel(psiClass.getName(), pkg, fields);

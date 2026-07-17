@@ -56,7 +56,7 @@ public class GenerateBabjCrudAction extends AnAction {
         VirtualFile sourceRoot = ProjectFileIndex.getInstance(project).getSourceRootForFile(entityVFile);
         if (sourceRoot == null) {
             Messages.showErrorDialog(project,
-                    "Izvorni koren (source root) za entitet nije pronađen.", "babj CRUD generator");
+                    "Izvorni koren (source root) za entitet nije pronađen.", "BABj CRUD Generator");
             return;
         }
 
@@ -68,7 +68,7 @@ public class GenerateBabjCrudAction extends AnAction {
         GenerationContext ctx = dialog.buildContext();
 
         BabjGenerator.Result result = WriteCommandAction.writeCommandAction(project)
-                .withName("babj CRUD generator")
+                .withName("BABj CRUD Generator")
                 .compute(() -> BabjGenerator.generate(project, sourceRoot, ctx));
 
         if (result.fileToOpen() != null && result.fileToOpen().getVirtualFile() != null) {
@@ -84,16 +84,16 @@ public class GenerateBabjCrudAction extends AnAction {
             result.created().forEach(n -> sb.append("  • ").append(n).append('\n'));
         }
         if (!result.skipped().isEmpty()) {
-            if (sb.length() > 0) {
+            if (!sb.isEmpty()) {
                 sb.append('\n');
             }
             sb.append("Preskočeno:\n");
             result.skipped().forEach(n -> sb.append("  • ").append(n).append('\n'));
         }
-        if (sb.length() == 0) {
+        if (sb.isEmpty()) {
             sb.append("Ništa nije generisano.");
         }
-        Messages.showInfoMessage(project, sb.toString(), "babj CRUD generator");
+        Messages.showInfoMessage(project, sb.toString(), "BABj CRUD Generator");
     }
 
     private static PsiClass findEntityClass(AnActionEvent e) {
@@ -104,6 +104,6 @@ public class GenerateBabjCrudAction extends AnAction {
         }
         PsiElement at = file.findElementAt(editor.getCaretModel().getOffset());
         PsiClass cls = PsiTreeUtil.getParentOfType(at, PsiClass.class);
-        return (cls != null && EntityModel.isEntity(cls)) ? cls : null;
+        return (EntityModel.isEntity(cls)) ? cls : null;
     }
 }

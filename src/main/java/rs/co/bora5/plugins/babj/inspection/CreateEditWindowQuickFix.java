@@ -39,7 +39,7 @@ public class CreateEditWindowQuickFix implements LocalQuickFix {
 
     @Override
     public @NotNull String getFamilyName() {
-        return "babj";
+        return "BABj";
     }
 
     @Override

@@ -38,7 +38,7 @@ public class HomeSelectInspection extends AbstractBaseJavaLocalInspectionTool {
         }
 
         PsiLiteralExpression selectLiteral =
-                BabjPsi.firstLiteralContaining(BabjPsi.declaredMethod(aClass, "getSelect"), '(');
+                BabjPsi.firstLiteralContaining(BabjPsi.declaredMethod(aClass, "getSelect"));
         String select = BabjPsi.stringValue(selectLiteral);
         if (select == null) {
             return null;
@@ -50,7 +50,7 @@ public class HomeSelectInspection extends AbstractBaseJavaLocalInspectionTool {
         String cols = stripOuterParens(select);
         List<ProblemDescriptor> problems = new ArrayList<>();
 
-        for (String rawToken : BabjPsi.splitTopLevel(cols, ',')) {
+        for (String rawToken : BabjPsi.splitTopLevel(cols)) {
             String token = rawToken.trim();
             if (!DOTTED_PATH.matcher(token).matches()) {
                 continue; // function call, literal, or a plain identifier — not a field path

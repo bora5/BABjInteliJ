@@ -16,7 +16,7 @@ public final class GenerationContext {
     private final String viewName;
     private final String route;
     private final String pageTitle;
-    private final List<BabjField> fields;
+    private final List<BABjField> fields;
 
     private final boolean generateDto;
     private final boolean generateHome;
@@ -24,7 +24,7 @@ public final class GenerationContext {
     private final boolean generateWindow;
 
     public GenerationContext(String basePackage, String entityName, String kType, String role,
-                             String viewName, String route, String pageTitle, List<BabjField> fields,
+                             String viewName, String route, String pageTitle, List<BABjField> fields,
                              boolean generateDto, boolean generateHome, boolean generateView,
                              boolean generateWindow) {
         this.basePackage = basePackage;
@@ -69,7 +69,7 @@ public final class GenerationContext {
         return pageTitle;
     }
 
-    public List<BabjField> getFields() {
+    public List<BABjField> getFields() {
         return fields;
     }
 

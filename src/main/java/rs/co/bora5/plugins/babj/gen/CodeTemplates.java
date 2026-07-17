@@ -5,7 +5,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
-import rs.co.bora5.plugins.babj.model.BabjField;
+import rs.co.bora5.plugins.babj.model.BABjField;
 import rs.co.bora5.plugins.babj.model.BabjNaming;
 import rs.co.bora5.plugins.babj.model.GenerationContext;
 
@@ -33,9 +33,9 @@ public final class CodeTemplates {
         imports.add("java.io.Serial");
         imports.add("rs.co.bora5.programs.bab.front.views.projections.AbstractDTO");
         imports.add(ctx.modelPackage() + "." + entity);
-        for (BabjField f : ctx.getFields()) {
-            if (!f.isAssociation() && f.getTypeFqn() != null) {
-                imports.add(f.getTypeFqn());
+        for (BABjField f : ctx.getFields()) {
+            if (!f.isAssociation() && f.typeFqn() != null) {
+                imports.add(f.typeFqn());
             }
         }
 
@@ -44,32 +44,32 @@ public final class CodeTemplates {
         sb.append("public class ").append(entity).append("DTO extends AbstractDTO<").append(entity).append("> {\n\n");
         serial(sb);
 
-        for (BabjField f : ctx.getFields()) {
-            sb.append("\tprivate ").append(f.getDtoType()).append(' ').append(f.getName()).append(";\n");
+        for (BABjField f : ctx.getFields()) {
+            sb.append("\tprivate ").append(f.getDtoType()).append(' ').append(f.name()).append(";\n");
         }
         sb.append('\n');
 
         // constructor
         sb.append("\tpublic ").append(entity).append("DTO(Long id");
-        for (BabjField f : ctx.getFields()) {
-            sb.append(", ").append(f.getDtoType()).append(' ').append(f.getName());
+        for (BABjField f : ctx.getFields()) {
+            sb.append(", ").append(f.getDtoType()).append(' ').append(f.name());
         }
         sb.append(") {\n");
         sb.append("\t\tthis.setId(id);\n");
-        for (BabjField f : ctx.getFields()) {
-            sb.append("\t\tthis.").append(f.getName()).append(" = ").append(f.getName()).append(";\n");
+        for (BABjField f : ctx.getFields()) {
+            sb.append("\t\tthis.").append(f.name()).append(" = ").append(f.name()).append(";\n");
         }
         sb.append("\t}\n\n");
 
         // accessors
-        for (BabjField f : ctx.getFields()) {
-            String cap = BabjNaming.capitalize(f.getName());
+        for (BABjField f : ctx.getFields()) {
+            String cap = BabjNaming.capitalize(f.name());
             sb.append("\tpublic ").append(f.getDtoType()).append(" get").append(cap).append("() {\n");
-            sb.append("\t\treturn ").append(f.getName()).append(";\n");
+            sb.append("\t\treturn ").append(f.name()).append(";\n");
             sb.append("\t}\n\n");
             sb.append("\tpublic void set").append(cap).append('(').append(f.getDtoType()).append(' ')
-                    .append(f.getName()).append(") {\n");
-            sb.append("\t\tthis.").append(f.getName()).append(" = ").append(f.getName()).append(";\n");
+                    .append(f.name()).append(") {\n");
+            sb.append("\t\tthis.").append(f.name()).append(" = ").append(f.name()).append(";\n");
             sb.append("\t}\n\n");
         }
 
@@ -81,7 +81,7 @@ public final class CodeTemplates {
 
     public static String home(GenerationContext ctx) {
         String entity = ctx.getEntityName();
-        boolean hasJoins = ctx.getFields().stream().anyMatch(BabjField::isAssociation);
+        boolean hasJoins = ctx.getFields().stream().anyMatch(BABjField::isAssociation);
 
         Set<String> imports = new TreeSet<>();
         imports.add("jakarta.ejb.LocalBean");
@@ -105,12 +105,12 @@ public final class CodeTemplates {
 
         // getSelect
         StringBuilder select = new StringBuilder("x.id");
-        for (BabjField f : ctx.getFields()) {
+        for (BABjField f : ctx.getFields()) {
             select.append(", ");
             if (f.isAssociation()) {
-                select.append(f.getAlias()).append('.').append(f.getDisplayProperty());
+                select.append(f.getAlias()).append('.').append(f.displayProperty());
             } else {
-                select.append("x.").append(f.getName());
+                select.append("x.").append(f.name());
             }
         }
         sb.append("\t@Override\n");
@@ -121,9 +121,9 @@ public final class CodeTemplates {
         // getJoin
         if (hasJoins) {
             StringBuilder join = new StringBuilder();
-            for (BabjField f : ctx.getFields()) {
+            for (BABjField f : ctx.getFields()) {
                 if (f.isAssociation()) {
-                    join.append(" LEFT JOIN x.").append(f.getName()).append(' ').append(f.getAlias());
+                    join.append(" LEFT JOIN x.").append(f.name()).append(' ').append(f.getAlias());
                 }
             }
             sb.append('\n');
@@ -157,16 +157,16 @@ public final class CodeTemplates {
         imports.add("java.io.Serial");
 
         StringBuilder cols = new StringBuilder();
-        for (BabjField f : ctx.getFields()) {
-            if (cols.length() > 0) {
+        for (BABjField f : ctx.getFields()) {
+            if (!cols.isEmpty()) {
                 cols.append(',');
             }
-            String label = BabjNaming.label(f.getName());
+            String label = BabjNaming.label(f.name());
             if (f.isAssociation()) {
-                cols.append('*').append(f.getName()).append('.').append(f.getDisplayProperty())
-                        .append('~').append(f.getName()).append('~').append(label);
+                cols.append('*').append(f.name()).append('.').append(f.displayProperty())
+                        .append('~').append(f.name()).append('~').append(label);
             } else {
-                cols.append(f.getName()).append('~').append(f.getName()).append('~').append(label);
+                cols.append(f.name()).append('~').append(f.name()).append('~').append(label);
             }
         }
 
@@ -209,12 +209,12 @@ public final class CodeTemplates {
         StringBuilder body = new StringBuilder();
         StringBuilder adds = new StringBuilder();
 
-        for (BabjField f : ctx.getFields()) {
+        for (BABjField f : ctx.getFields()) {
             Component c = componentFor(f);
             imports.addAll(c.imports());
 
             if (f.isAssociation()) {
-                String assoc = f.getTypeSimpleName();
+                String assoc = f.typeSimpleName();
                 imports.add(ctx.modelPackage() + "." + assoc);
                 imports.add(ctx.homePackage() + "." + assoc + "Home");
                 // One injected EJB per associated type, even if several fields reference it.
@@ -224,11 +224,11 @@ public final class CodeTemplates {
                             .append(BabjNaming.decapitalize(assoc)).append("EJB;\n\n");
                 }
             }
-            if (f.getKind() == BabjField.Kind.ENUM && f.getTypeFqn() != null) {
-                imports.add(f.getTypeFqn());
+            if (f.kind() == BABjField.Kind.ENUM && f.typeFqn() != null) {
+                imports.add(f.typeFqn());
             }
 
-            decls.append("\t@PropertyId(value = \"").append(f.getName()).append("\")\n");
+            decls.append("\t@PropertyId(value = \"").append(f.name()).append("\")\n");
             decls.append("\tprivate ").append(c.declaredType()).append(' ').append(c.var()).append(";\n\n");
 
             body.append("\t\t").append(c.init()).append('\n');
@@ -267,28 +267,28 @@ public final class CodeTemplates {
     private record Component(String declaredType, String var, String init, Set<String> imports) {
     }
 
-    private static Component componentFor(BabjField f) {
-        String cap = BabjNaming.capitalize(f.getName());
-        String label = BabjNaming.label(f.getName());
+    private static Component componentFor(BABjField f) {
+        String cap = BabjNaming.capitalize(f.name());
+        String label = BabjNaming.label(f.name());
         Set<String> imp = new LinkedHashSet<>();
 
         if (f.isAssociation()) {
             imp.add("com.vaadin.flow.component.combobox.ComboBox");
-            String assocDecap = BabjNaming.decapitalize(f.getTypeSimpleName());
+            String assocDecap = BabjNaming.decapitalize(f.typeSimpleName());
             String var = "cb" + cap;
             String init = var + " = createSimpleComboBox(\"" + label + ":\", " + assocDecap
-                    + "EJB, \"" + f.getDisplayProperty() + "\");";
-            return new Component("ComboBox<" + f.getTypeSimpleName() + ">", var, init, imp);
+                          + "EJB, \"" + f.displayProperty() + "\");";
+            return new Component("ComboBox<" + f.typeSimpleName() + ">", var, init, imp);
         }
-        if (f.getKind() == BabjField.Kind.ENUM) {
+        if (f.kind() == BABjField.Kind.ENUM) {
             imp.add("com.vaadin.flow.component.combobox.ComboBox");
             String var = "cb" + cap;
             String init = var + " = new ComboBox<>(\"" + label + ":\");\n\t\t"
-                    + var + ".setItems(" + f.getTypeSimpleName() + ".values());";
-            return new Component("ComboBox<" + f.getTypeSimpleName() + ">", var, init, imp);
+                          + var + ".setItems(" + f.typeSimpleName() + ".values());";
+            return new Component("ComboBox<" + f.typeSimpleName() + ">", var, init, imp);
         }
 
-        return switch (f.getTypeSimpleName()) {
+        return switch (f.typeSimpleName()) {
             case "boolean", "Boolean" -> {
                 imp.add("com.vaadin.flow.component.checkbox.Checkbox");
                 String var = "cb" + cap;

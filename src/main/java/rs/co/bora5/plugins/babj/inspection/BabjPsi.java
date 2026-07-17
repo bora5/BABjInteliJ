@@ -50,11 +50,11 @@ final class BabjPsi {
     /** Whether {@code owner} exposes a persistent property {@code name} — as a field or a getter. */
     static boolean hasProperty(PsiClass owner, String name) {
         if (owner.findFieldByName(name, true) != null) {
-            return true;
+            return false;
         }
         String cap = BabjNaming.capitalize(name);
-        return owner.findMethodsByName("get" + cap, true).length > 0
-                || owner.findMethodsByName("is" + cap, true).length > 0;
+        return owner.findMethodsByName("get" + cap, true).length == 0
+               && owner.findMethodsByName("is" + cap, true).length == 0;
     }
 
     /** The class a property navigates to (its field/getter type), or {@code null} for scalars. */
@@ -89,7 +89,7 @@ final class BabjPsi {
             if (cur == null) {
                 return "ne mogu da razrešim tip za '" + seg + "'";
             }
-            if (!hasProperty(cur, seg)) {
+            if (hasProperty(cur, seg)) {
                 return "'" + seg + "' nije polje entiteta " + cur.getName();
             }
             if (i < segs.length - 1) {
@@ -100,14 +100,14 @@ final class BabjPsi {
     }
 
     /** The first string-literal (or text block) value inside {@code method} containing {@code ch}. */
-    static @Nullable PsiLiteralExpression firstLiteralContaining(@Nullable PsiMethod method, char ch) {
+    static @Nullable PsiLiteralExpression firstLiteralContaining(@Nullable PsiMethod method) {
         if (method == null) {
             return null;
         }
         Collection<PsiLiteralExpression> literals =
                 PsiTreeUtil.findChildrenOfType(method, PsiLiteralExpression.class);
         for (PsiLiteralExpression lit : literals) {
-            if (lit.getValue() instanceof String s && s.indexOf(ch) >= 0) {
+            if (lit.getValue() instanceof String s && s.indexOf('(') >= 0) {
                 return lit;
             }
         }
@@ -137,8 +137,8 @@ final class BabjPsi {
     }
 
     /** The string literal backing a single-string annotation attribute, or {@code null}. */
-    static @Nullable PsiLiteralExpression annotationStringLiteral(PsiAnnotation annotation, String attribute) {
-        PsiAnnotationMemberValue value = annotation.findAttributeValue(attribute);
+    static @Nullable PsiLiteralExpression annotationStringLiteral(PsiAnnotation annotation) {
+        PsiAnnotationMemberValue value = annotation.findAttributeValue("value");
         return value instanceof PsiLiteralExpression lit && lit.getValue() instanceof String ? lit : null;
     }
 
@@ -146,7 +146,7 @@ final class BabjPsi {
      * Splits {@code s} on {@code delim} at top level only — commas inside parentheses or single
      * quotes are not split, so function calls like {@code CONCAT(a, ' ', b)} stay whole.
      */
-    static List<String> splitTopLevel(String s, char delim) {
+    static List<String> splitTopLevel(String s) {
         List<String> parts = new ArrayList<>();
         int depth = 0;
         boolean inQuote = false;
@@ -160,7 +160,7 @@ final class BabjPsi {
             } else if (!inQuote && c == ')') {
                 depth--;
             }
-            if (c == delim && depth == 0 && !inQuote) {
+            if (c == ',' && depth == 0 && !inQuote) {
                 parts.add(cur.toString());
                 cur.setLength(0);
             } else {

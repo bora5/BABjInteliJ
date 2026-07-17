@@ -42,7 +42,7 @@ public class ColumnNamesInspection extends AbstractBaseJavaLocalInspectionTool {
         if (annotation == null) {
             return null;
         }
-        PsiLiteralExpression literal = BabjPsi.annotationStringLiteral(annotation, "value");
+        PsiLiteralExpression literal = BabjPsi.annotationStringLiteral(annotation);
         String value = BabjPsi.stringValue(literal);
         if (value == null || value.isBlank()) {
             return null;
@@ -51,7 +51,7 @@ public class ColumnNamesInspection extends AbstractBaseJavaLocalInspectionTool {
         PsiClass dto = BabjPsi.typeArgument(aClass, GENERIC_VIEW, 2);
         List<ProblemDescriptor> problems = new ArrayList<>();
 
-        for (String entry : BabjPsi.splitTopLevel(value, ',')) {
+        for (String entry : BabjPsi.splitTopLevel(value)) {
             String[] parts = entry.split("~", -1);
             String prop = parts[0].trim();
             if (prop.startsWith("*")) {
@@ -66,7 +66,7 @@ public class ColumnNamesInspection extends AbstractBaseJavaLocalInspectionTool {
             }
 
             String key = parts.length > 1 ? parts[1].trim() : "";
-            if (dto != null && IDENT.matcher(key).matches() && !BabjPsi.hasProperty(dto, key)) {
+            if (dto != null && IDENT.matcher(key).matches() && BabjPsi.hasProperty(dto, key)) {
                 problems.add(problem(manager, literal, isOnTheFly,
                         "@ColumnNames: ključ '" + key + "' nije podržan iz servisa (nema polja '"
                                 + key + "' u DTO " + dto.getName() + ")."));
