@@ -13,6 +13,9 @@
   definitions.
 - Added an inspection for invalid property references in filter, visibility, status, uniqueness,
   and Vaadin binding annotations.
+- The CRUD dialog now offers every concrete `OperaterEntityInterface` implementation and discovers
+  role constants from concrete `AbstractRoles` subclasses, including inherited constants, with
+  multi-role selection for `@AdminTypes`.
 - Added Borivoj Bogdanović as the plugin author and raised the plugin version to **1.1.0**.
 
 ### Changed

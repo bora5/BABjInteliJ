@@ -4,15 +4,17 @@ import java.util.List;
 
 /**
  * All parameters needed to render the BABj quartet for one entity: the resolved base package,
- * entity name, the operator ({@code K}) type, the view's declarative metadata (role, route, title,
- * class name) and which artifacts to emit.
+ * entity name, the operator ({@code K}) type, the view's declarative metadata (roles registry,
+ * selected roles, route, title, class name) and which artifacts to emit.
  */
 public final class GenerationContext {
 
     private final String basePackage;
     private final String entityName;
     private final String kType;
-    private final String role;
+    private final String rolesType;
+    private final String rolesTypeFqn;
+    private final List<String> roles;
     private final String viewName;
     private final String route;
     private final String pageTitle;
@@ -23,14 +25,17 @@ public final class GenerationContext {
     private final boolean generateView;
     private final boolean generateWindow;
 
-    public GenerationContext(String basePackage, String entityName, String kType, String role,
+    public GenerationContext(String basePackage, String entityName, String kType,
+                             String rolesType, String rolesTypeFqn, List<String> roles,
                              String viewName, String route, String pageTitle, List<BABjField> fields,
                              boolean generateDto, boolean generateHome, boolean generateView,
                              boolean generateWindow) {
         this.basePackage = basePackage;
         this.entityName = entityName;
         this.kType = kType;
-        this.role = role;
+        this.rolesType = rolesType;
+        this.rolesTypeFqn = rolesTypeFqn;
+        this.roles = List.copyOf(roles);
         this.viewName = viewName;
         this.route = route;
         this.pageTitle = pageTitle;
@@ -53,8 +58,16 @@ public final class GenerationContext {
         return kType;
     }
 
-    public String getRole() {
-        return role;
+    public String getRolesType() {
+        return rolesType;
+    }
+
+    public String getRolesTypeFqn() {
+        return rolesTypeFqn;
+    }
+
+    public List<String> getRoles() {
+        return roles;
     }
 
     public String getViewName() {

@@ -153,7 +153,9 @@ public final class CodeTemplates {
         imports.add(ctx.modelPackage() + "." + entity);
         imports.add(ctx.modelPackage() + "." + ctx.getKType());
         imports.add(ctx.homePackage() + "." + entity + "Home");
-        imports.add(ctx.getBasePackage() + ".utils.Roles");
+        if (!ctx.getRolesTypeFqn().isBlank()) {
+            imports.add(ctx.getRolesTypeFqn());
+        }
         imports.add("java.io.Serial");
 
         StringBuilder cols = new StringBuilder();
@@ -173,7 +175,22 @@ public final class CodeTemplates {
         StringBuilder sb = new StringBuilder();
         header(sb, ctx.viewPackage(), imports);
         sb.append("@EnableNew\n@EnableEdit\n@EnableDelete\n");
-        sb.append("@AdminTypes(roles = Roles.").append(ctx.getRole()).append(")\n");
+        if (!ctx.getRoles().isEmpty()) {
+            sb.append("@AdminTypes(roles = ");
+            if (ctx.getRoles().size() > 1) {
+                sb.append('{');
+            }
+            for (int i = 0; i < ctx.getRoles().size(); i++) {
+                if (i > 0) {
+                    sb.append(", ");
+                }
+                sb.append(ctx.getRolesType()).append('.').append(ctx.getRoles().get(i));
+            }
+            if (ctx.getRoles().size() > 1) {
+                sb.append('}');
+            }
+            sb.append(")\n");
+        }
         sb.append("@ColumnNames(\"").append(cols).append("\")\n");
         sb.append("@PageTitle(\"").append(ctx.getPageTitle()).append("\")\n");
         sb.append("@Route(value = \"").append(ctx.getRoute()).append("\", layout = MainView.class)\n");

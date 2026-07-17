@@ -28,13 +28,15 @@ The generator maps entity fields as follows:
 - `LocalDate`, `LocalDateTime`, `LocalTime`, numbers, `boolean`, and `String` → matching Vaadin fields.
 - Collections (`@OneToMany` / `@ManyToMany`) are skipped.
 
-The operator (`K`) type is detected by scanning the project for an implementation of
-`OperaterEntityInterface` (for example, `Korisnik`) and is pre-filled in the dialog.
+The operator (`K`) type is detected by scanning the project for concrete implementations of
+`OperaterEntityInterface` and offered as an editable choice. The dialog also discovers concrete
+subclasses of `AbstractRoles`, collects all inherited and locally declared `public static final
+String` constants, and supports selecting multiple roles for `@AdminTypes`.
 
 **Run it:** place the caret in an entity, press `Alt+Insert` (Generate), and select
-**BABj CRUD (DTO, Home, View, Window)**. The dialog pre-fills the base package, operator type, role,
-view class name, route, and title, and lets you choose which artifacts to generate. Existing files
-are never overwritten.
+**BABj CRUD (DTO, Home, View, Window)**. The dialog pre-fills the base package, operator choices,
+roles registry, role choices, view class name, route, and title, and lets you choose which artifacts
+to generate. Existing files are never overwritten.
 
 ### 2. Live templates
 
