@@ -16,7 +16,7 @@
         </ul>
         ]]></description>
 
-    <!-- Java PSI je jedina neophodna zavisnost; radi i na Community Edition. -->
+    <!-- Java PSI is the only dependency; the plugin runs on Community and Ultimate alike. -->
     <depends>com.intellij.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">

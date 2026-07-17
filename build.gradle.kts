@@ -10,10 +10,11 @@ version = providers.gradleProperty("version").get()
 
 dependencies {
     intellijPlatform {
-        // Target IntelliJ IDEA Ultimate 2026.2 (build 262), matching the developer's IDE.
-        // If this fails to resolve (e.g. still EAP-only), pin the exact build instead:
-        //   create("IU", "262.8665.258")
-        intellijIdeaUltimate("2026.2")
+        // Community 2026.2: the plugin uses only core + Java PSI APIs, so it installs and runs in
+        // Ultimate too, while keeping the runIde sandbox clean. (The IntelliJ JPA persistence-model
+        // API is Ultimate-internal/undocumented and gives negligible benefit for entities without
+        // embeddables, so it is intentionally not used.)
+        intellijIdeaCommunity("2026.2")
         bundledPlugin("com.intellij.java")
     }
 }
