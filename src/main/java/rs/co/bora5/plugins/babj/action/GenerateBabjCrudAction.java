@@ -97,13 +97,24 @@ public class GenerateBabjCrudAction extends AnAction {
     }
 
     private static PsiClass findEntityClass(AnActionEvent e) {
-        PsiFile file = e.getData(CommonDataKeys.PSI_FILE);
-        Editor editor = e.getData(CommonDataKeys.EDITOR);
-        if (!(file instanceof PsiJavaFile) || editor == null) {
+        if (!(e.getData(CommonDataKeys.PSI_FILE) instanceof PsiJavaFile javaFile)) {
             return null;
         }
-        PsiElement at = file.findElementAt(editor.getCaretModel().getOffset());
-        PsiClass cls = PsiTreeUtil.getParentOfType(at, PsiClass.class);
-        return (EntityModel.isEntity(cls)) ? cls : null;
+        // Prefer the class under the caret.
+        Editor editor = e.getData(CommonDataKeys.EDITOR);
+        if (editor != null) {
+            PsiElement at = javaFile.findElementAt(editor.getCaretModel().getOffset());
+            PsiClass cls = PsiTreeUtil.getParentOfType(at, PsiClass.class);
+            if (EntityModel.isEntity(cls)) {
+                return cls;
+            }
+        }
+        // Fall back to any entity declared in the file, regardless of caret position.
+        for (PsiClass cls : javaFile.getClasses()) {
+            if (EntityModel.isEntity(cls)) {
+                return cls;
+            }
+        }
+        return null;
     }
 }
