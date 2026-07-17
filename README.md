@@ -3,6 +3,8 @@
 Development support for the **BABj** library (`rs.co.bora5.programs.bab`). The plugin automates
 BABj conventions and reduces repetitive boilerplate.
 
+**Author:** Borivoj Bogdanović
+
 ## Features
 
 ### 1. CRUD quartet generator
@@ -26,13 +28,15 @@ The generator maps entity fields as follows:
 - `LocalDate`, `LocalDateTime`, `LocalTime`, numbers, `boolean`, and `String` → matching Vaadin fields.
 - Collections (`@OneToMany` / `@ManyToMany`) are skipped.
 
-The operator (`K`) type is detected by scanning the project for an implementation of
-`OperaterEntityInterface` (for example, `Korisnik`) and is pre-filled in the dialog.
+The operator (`K`) type is detected by scanning the project for concrete implementations of
+`OperaterEntityInterface` and offered as an editable choice. The dialog also discovers concrete
+subclasses of `AbstractRoles`, collects all inherited and locally declared `public static final
+String` constants, and supports selecting multiple roles for `@AdminTypes`.
 
 **Run it:** place the caret in an entity, press `Alt+Insert` (Generate), and select
-**BABj CRUD (DTO, Home, View, Window)**. The dialog pre-fills the base package, operator type, role,
-view class name, route, and title, and lets you choose which artifacts to generate. Existing files
-are never overwritten.
+**BABj CRUD (DTO, Home, View, Window)**. The dialog pre-fills the base package, operator choices,
+roles registry, role choices, view class name, route, and title, and lets you choose which artifacts
+to generate. Existing files are never overwritten.
 
 ### 2. Live templates
 
@@ -47,6 +51,29 @@ are never overwritten.
   Functions such as `CONCAT(...)` and literals are ignored.
 - **`@ColumnNames` validation** checks each entity property path and verifies that the optional key
   is available from the service DTO.
+- **Annotation property validation** checks entity-property references in filters, field-visibility,
+  status, uniqueness, and `@PropertyId` bindings.
+
+### 4. BABj Navigator
+
+Recognized Entity, DTO, Home, View, and EditWindow classes have a BABj gutter icon. Clicking the
+icon lists every artifact in the same module and opens the selected class. The **BABj Navigator**
+tool window shows the complete module chain, including missing artifacts, and supports double-click
+navigation.
+
+### 5. Smart annotation completion
+
+Code completion inside BABj annotation strings suggests valid entity properties and one-level
+association paths. `@ColumnNames` completion inserts complete `property~key~Label` definitions.
+Completion is also available for `@AddCondition`, `@AdminVisibleFields`, `@EnabledForStatus`,
+`@SqlFieldName`, `@PropertyId`, and `@SingleUniqueField` property attributes.
+
+## Roadmap
+
+- visual CRUD designer with a View/EditWindow preview
+- REST endpoint generator based on `AbstractEndpoint`
+- Agent Studio for visualizing and simulating event → agent → criterion → action flows
+- generators for import/export, reports, attachments, messaging, and administration modules
 
 ## Build and run
 
@@ -70,9 +97,11 @@ Install the ZIP from `build/distributions/` using
 ```text
 src/main/java/rs/co/bora5/plugins/babj/
 ├── action/        GenerateBABjCrudAction and configuration dialog
+├── completion/    context-aware BABj annotation completion
 ├── gen/           CodeTemplates renderer and file generator
 ├── inspection/    BABj inspections and quick fixes
-└── model/         entity parser, field model, naming, and generation context
+├── model/         entity parser, field model, naming, and generation context
+└── navigation/    related-artifact resolver, gutter links, and Navigator tool window
 src/main/resources/
 ├── META-INF/      plugin.xml and plugin icons
 ├── icons/         action icons

@@ -1,6 +1,7 @@
 package rs.co.bora5.plugins.babj.model;
 
 import java.util.Collection;
+import java.util.List;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.JavaPsiFacade;
@@ -24,27 +25,36 @@ public final class OperaterTypeResolver {
     }
 
     public static String resolve(Project project) {
+        return resolveAll(project).get(0);
+    }
+
+    /** Returns every concrete project implementation, sorted for stable presentation in the UI. */
+    public static List<String> resolveAll(Project project) {
         if (project == null) {
-            return FALLBACK;
+            return List.of(FALLBACK);
         }
         try {
             PsiClass iface = JavaPsiFacade.getInstance(project)
                     .findClass(OPERATER_INTERFACE, GlobalSearchScope.allScope(project));
             if (iface == null) {
-                return FALLBACK;
+                return List.of(FALLBACK);
             }
             Collection<PsiClass> implementors = ClassInheritorsSearch
                     .search(iface, GlobalSearchScope.projectScope(project), true).findAll();
-            for (PsiClass c : implementors) {
-                if (!c.isInterface()
-                        && !c.hasModifierProperty(PsiModifier.ABSTRACT)
-                        && c.getName() != null) {
-                    return c.getName();
-                }
+            List<String> concreteTypes = implementors.stream()
+                    .filter(c -> !c.isInterface())
+                    .filter(c -> !c.hasModifierProperty(PsiModifier.ABSTRACT))
+                    .map(PsiClass::getName)
+                    .filter(name -> name != null && !name.isBlank())
+                    .distinct()
+                    .sorted()
+                    .toList();
+            if (!concreteTypes.isEmpty()) {
+                return concreteTypes;
             }
         } catch (Exception e) {
-            return FALLBACK;
+            return List.of(FALLBACK);
         }
-        return FALLBACK;
+        return List.of(FALLBACK);
     }
 }

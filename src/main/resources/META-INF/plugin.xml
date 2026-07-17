@@ -2,7 +2,7 @@
 <idea-plugin>
     <id>rs.co.bora5.plugins.BABjInteliJ</id>
     <name>BABj</name>
-    <vendor url="https://bora5.co.rs">bora5</vendor>
+    <vendor url="https://bora5.co.rs">Borivoj Bogdanović</vendor>
 
     <description><![CDATA[
         Development support for the <b>BABj</b> library (rs.co.bora5.programs.bab).<br>
@@ -13,6 +13,10 @@
               <code>bdto</code>.</li>
           <li><b>Inspections</b> — validate BABj view, service, DTO, and edit-window conventions,
               with a quick fix for generating a missing Edit&lt;Entity&gt;Window.</li>
+          <li><b>Navigator</b> — gutter links and a visual tool window connect each Entity, DTO,
+              Home, View, and EditWindow module.</li>
+          <li><b>Smart completion</b> — suggests valid entity properties and complete column
+              definitions inside BABj annotations.</li>
         </ul>
         ]]></description>
 
@@ -21,6 +25,15 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <defaultLiveTemplates file="/liveTemplates/BABj.xml"/>
+
+        <codeInsight.lineMarkerProvider language="JAVA"
+                                        implementationClass="rs.co.bora5.plugins.babj.navigation.BABjLineMarkerProvider"/>
+        <completion.contributor language="JAVA"
+                                implementationClass="rs.co.bora5.plugins.babj.completion.BABjCompletionContributor"/>
+        <toolWindow id="BABj Navigator"
+                    anchor="right"
+                    icon="/icons/babjNavigate.svg"
+                    factoryClass="rs.co.bora5.plugins.babj.navigation.BABjNavigatorToolWindowFactory"/>
 
         <localInspection language="JAVA"
                          shortName="BABjMissingEditWindow"
@@ -45,6 +58,14 @@
                          enabledByDefault="true"
                          level="WARNING"
                          implementationClass="rs.co.bora5.plugins.babj.inspection.ColumnNamesInspection"/>
+
+        <localInspection language="JAVA"
+                         shortName="BABjAnnotationProperty"
+                         displayName="BABj: validate annotation property references"
+                         groupName="BABj"
+                         enabledByDefault="true"
+                         level="WARNING"
+                         implementationClass="rs.co.bora5.plugins.babj.inspection.AnnotationPropertyInspection"/>
     </extensions>
 
     <actions>
