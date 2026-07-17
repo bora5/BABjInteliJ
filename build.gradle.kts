@@ -19,6 +19,8 @@ dependencies {
         // force a JDK 25 toolchain for no benefit.
         intellijIdeaCommunity("2024.3")
         bundledPlugin("com.intellij.java")
+        testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
+        testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Plugin.Java)
     }
 }
 

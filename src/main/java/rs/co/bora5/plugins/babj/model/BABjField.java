@@ -65,7 +65,10 @@ public record BABjField(String name, Kind kind, String typeSimpleName, String ty
         return name;
     }
 
-    /** The Java type used for this property in the DTO — associations flatten to {@code String}. */
+    /**
+     * The Java type used for this property in the DTO. Entity associations flatten to
+     * {@code String}; enums retain their concrete type and are treated like scalar values.
+     */
     public String getDtoType() {
         return kind == Kind.ASSOCIATION ? "String" : typeSimpleName;
     }

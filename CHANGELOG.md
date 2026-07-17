@@ -4,6 +4,19 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Association fields whose type inherits BAB `AbstractEntity` are now detected even when their JPA
+  relationship annotation is placed on the getter instead of the field.
+- Association DTO/display projection now selects an actual `String` property in the order
+  `naziv`, `username`, `name`, `oznaka`, then the first remaining `String` field, including
+  inherited fields.
+- Documented and locked in the CRUD generation contract: entity associations flatten to their
+  display `String`, while enums retain their concrete DTO/Home type and use typed combo boxes
+  populated with `Enum.values()` in edit windows.
+- Added PSI and template regression coverage for associations and enums across scanning, DTO, Home,
+  and EditWindow generation, and raised the plugin version to **1.3.1**.
+
 ### Added — complete module support
 
 - Import scaffolds are now wired into newly generated Views through `@EnableImport` and

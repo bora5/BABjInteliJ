@@ -33,7 +33,8 @@ These are the checks already confirmed in WasteX and only need repeating after a
 
 ## 3. CRUD Designer
 
-1. Open a JPA entity with at least a `String`, number, boolean, date, enum, and `@ManyToOne` field.
+1. Open a JPA entity with at least a `String`, number, boolean, date, enum, and `@ManyToOne`
+   association whose type inherits BAB `AbstractEntity`. Place `@ManyToOne` on its getter.
 2. Run `Alt+Insert → BABj Code Generator` and open **CRUD Designer**.
 3. Clear one field, move another field to the top, and override one editor type.
 4. Confirm that **Grid projection** and **Edit form** previews update immediately.
@@ -45,6 +46,11 @@ Expected:
 - the reordered field order is identical in DTO constructor, `getSelect()`, and `@ColumnNames`;
 - the selected editor is used in the generated EditWindow;
 - associations still produce a join and typed combo box.
+- association fields are generated as their display `String` in DTO and Home;
+- the association display field is selected in this order: `naziv`, `username`, `name`, `oznaka`,
+  then any remaining `String` field;
+- enum fields retain their concrete type and `x.<field>` Home projection, with a typed combo box
+  populated with `<Enum>.values()` in EditWindow.
 
 ## 4. Operator and role discovery
 
