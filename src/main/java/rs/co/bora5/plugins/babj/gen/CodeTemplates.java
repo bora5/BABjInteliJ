@@ -87,6 +87,9 @@ public final class CodeTemplates {
         imports.add("jakarta.ejb.LocalBean");
         imports.add("jakarta.ejb.Stateless");
         imports.add("rs.co.bora5.programs.bab.session.AbstractHome");
+        if (ctx.isGenerateRest()) {
+            imports.add("rs.co.bora5.programs.bab.session.interfaceCheck.RestPublicIdHomeInterface");
+        }
         imports.add("rs.co.bora5.programs.bab.utils.Primary");
         imports.add(ctx.dtoPackage() + "." + entity + "DTO");
         imports.add(ctx.modelPackage() + "." + entity);
@@ -96,7 +99,11 @@ public final class CodeTemplates {
         header(sb, ctx.homePackage(), imports);
         sb.append("@Stateless\n@LocalBean\n@Primary\n");
         sb.append("public class ").append(entity).append("Home extends AbstractHome<")
-                .append(entity).append(", ").append(entity).append("DTO> {\n\n");
+                .append(entity).append(", ").append(entity).append("DTO>");
+        if (ctx.isGenerateRest()) {
+            sb.append(" implements RestPublicIdHomeInterface<").append(entity).append('>');
+        }
+        sb.append(" {\n\n");
         serial(sb);
 
         sb.append("\tpublic ").append(entity).append("Home() {\n");
@@ -175,6 +182,9 @@ public final class CodeTemplates {
         StringBuilder sb = new StringBuilder();
         header(sb, ctx.viewPackage(), imports);
         sb.append("@EnableNew\n@EnableEdit\n@EnableDelete\n");
+        if (ctx.isEnableExport()) {
+            sb.append("@EnableExport\n");
+        }
         if (!ctx.getRoles().isEmpty()) {
             sb.append("@AdminTypes(roles = ");
             if (ctx.getRoles().size() > 1) {
@@ -203,6 +213,109 @@ public final class CodeTemplates {
         return sb.toString();
     }
 
+    // --------------------------------------------------------------- REST API
+
+    public static String restEndpoint(GenerationContext ctx) {
+        String entity = ctx.getEntityName();
+        Set<String> imports = new TreeSet<>();
+        imports.add("jakarta.ws.rs.Path");
+        imports.add("rs.co.bora5.programs.bab.session.rest.AbstractEndpoint");
+        imports.add(ctx.dtoPackage() + "." + entity + "DTO");
+        imports.add(ctx.homePackage() + "." + entity + "Home");
+        imports.add(ctx.modelPackage() + "." + entity);
+        imports.add(ctx.modelPackage() + "." + ctx.getKType());
+
+        StringBuilder sb = new StringBuilder();
+        header(sb, ctx.restPackage(), imports);
+        sb.append("@Path(\"").append(ctx.getRestPath()).append("\")\n");
+        sb.append("public class ").append(entity).append("Endpoint extends AbstractEndpoint<")
+                .append(entity).append(", ").append(entity).append("Home, ")
+                .append(entity).append("DTO, ").append(ctx.getKType()).append("> {\n")
+                .append("}\n");
+        return sb.toString();
+    }
+
+    // ---------------------------------------------------------- Import/report
+
+    public static String csvImport(GenerationContext ctx) {
+        String entity = ctx.getEntityName();
+        Set<String> imports = moduleImports(ctx);
+        imports.add("java.util.List");
+        imports.add("jakarta.enterprise.context.Dependent");
+        imports.add("rs.co.bora5.programs.bab.front.windowses.GenericCSVUploadFileWindow");
+        imports.add("rs.co.bora5.programs.bab.utils.Primary");
+
+        StringBuilder sb = new StringBuilder();
+        header(sb, ctx.windowPackage(), imports);
+        sb.append("@Dependent\n@Primary\n")
+                .append("public class Import").append(entity)
+                .append("CsvWindow extends GenericCSVUploadFileWindow<")
+                .append(entity).append(", ").append(entity).append("Home, ")
+                .append(entity).append("DTO, ").append(ctx.getKType()).append("> {\n\n")
+                .append("\t@Override\n\tpublic void doWork(List<List<String>> rows) {\n")
+                .append("\t\t// TODO Map each input row and persist it through getServiceEJB().\n")
+                .append("\t}\n}\n");
+        return sb.toString();
+    }
+
+    public static String xlsImport(GenerationContext ctx) {
+        String entity = ctx.getEntityName();
+        Set<String> imports = moduleImports(ctx);
+        imports.add("jakarta.enterprise.context.Dependent");
+        imports.add("org.apache.poi.hssf.usermodel.HSSFWorkbook");
+        imports.add("rs.co.bora5.programs.bab.front.windowses.GenericXLSUploadFileWindow");
+        imports.add("rs.co.bora5.programs.bab.utils.Primary");
+
+        StringBuilder sb = new StringBuilder();
+        header(sb, ctx.windowPackage(), imports);
+        sb.append("@Dependent\n@Primary\n")
+                .append("public class Import").append(entity)
+                .append("XlsWindow extends GenericXLSUploadFileWindow<")
+                .append(entity).append(", ").append(entity).append("Home, ")
+                .append(entity).append("DTO, ").append(ctx.getKType()).append("> {\n\n")
+                .append("\t@Override\n\tpublic void doWork(HSSFWorkbook workbook) {\n")
+                .append("\t\t// TODO Read workbook rows and persist them through getServiceEJB().\n")
+                .append("\t}\n}\n");
+        return sb.toString();
+    }
+
+    public static String report(GenerationContext ctx) {
+        String entity = ctx.getEntityName();
+        Set<String> imports = new TreeSet<>();
+        imports.add("com.vaadin.flow.component.orderedlayout.VerticalLayout");
+        imports.add("jakarta.enterprise.context.Dependent");
+        imports.add("rs.co.bora5.programs.bab.front.windowses.GenericReportWindow");
+        imports.add("rs.co.bora5.programs.bab.utils.Primary");
+        imports.add(ctx.modelPackage() + "." + entity);
+        imports.add(ctx.modelPackage() + "." + ctx.getKType());
+
+        StringBuilder sb = new StringBuilder();
+        header(sb, ctx.windowPackage(), imports);
+        sb.append("@Dependent\n@Primary\n")
+                .append("public class ").append(entity)
+                .append("ReportWindow extends GenericReportWindow<")
+                .append(entity).append(", ").append(ctx.getKType()).append("> {\n\n")
+                .append("\tpublic ").append(entity).append("ReportWindow() {\n")
+                .append("\t\tsuper(").append(entity).append(".class);\n\t}\n\n")
+                .append("\t@Override\n\tpublic void createContent(VerticalLayout layout) {\n")
+                .append("\t\t// TODO Add report parameters and bind them to selekcija.\n")
+                .append("\t}\n\n")
+                .append("\t@Override\n\tprotected void doMain() {\n")
+                .append("\t\t// TODO Generate the report using printUtils, emailUtils, or excelUtils.\n")
+                .append("\t}\n}\n");
+        return sb.toString();
+    }
+
+    private static Set<String> moduleImports(GenerationContext ctx) {
+        String entity = ctx.getEntityName();
+        Set<String> imports = new TreeSet<>();
+        imports.add(ctx.dtoPackage() + "." + entity + "DTO");
+        imports.add(ctx.homePackage() + "." + entity + "Home");
+        imports.add(ctx.modelPackage() + "." + entity);
+        imports.add(ctx.modelPackage() + "." + ctx.getKType());
+        return imports;
+    }
+
     // ----------------------------------------------------------------- Window
 
     public static String window(GenerationContext ctx) {
@@ -229,6 +342,9 @@ public final class CodeTemplates {
         for (BABjField f : ctx.getFields()) {
             Component c = componentFor(f);
             imports.addAll(c.imports());
+            if (f.typeFqn() != null) {
+                imports.add(f.typeFqn());
+            }
 
             if (f.isAssociation()) {
                 String assoc = f.typeSimpleName();
@@ -241,10 +357,6 @@ public final class CodeTemplates {
                             .append(BABjNaming.decapitalize(assoc)).append("EJB;\n\n");
                 }
             }
-            if (f.kind() == BABjField.Kind.ENUM && f.typeFqn() != null) {
-                imports.add(f.typeFqn());
-            }
-
             decls.append("\t@PropertyId(value = \"").append(f.name()).append("\")\n");
             decls.append("\tprivate ").append(c.declaredType()).append(' ').append(c.var()).append(";\n\n");
 
@@ -305,42 +417,87 @@ public final class CodeTemplates {
             return new Component("ComboBox<" + f.typeSimpleName() + ">", var, init, imp);
         }
 
-        return switch (f.typeSimpleName()) {
-            case "boolean", "Boolean" -> {
+        BABjField.EditorKind editor = resolvedEditorKind(f);
+        return switch (editor) {
+            case CHECKBOX -> {
                 imp.add("com.vaadin.flow.component.checkbox.Checkbox");
                 String var = "cb" + cap;
                 yield new Component("Checkbox", var, var + " = new Checkbox(\"" + label + "\");", imp);
             }
-            case "int", "Integer", "long", "Long", "short", "Short" -> {
+            case INTEGER -> {
                 imp.add("com.vaadin.flow.component.textfield.IntegerField");
                 String var = "if" + cap;
                 yield new Component("IntegerField", var, var + " = new IntegerField(\"" + label + ":\");", imp);
             }
-            case "double", "Double", "float", "Float", "BigDecimal" -> {
+            case NUMBER -> {
                 imp.add("com.vaadin.flow.component.textfield.NumberField");
                 String var = "nf" + cap;
                 yield new Component("NumberField", var, var + " = new NumberField(\"" + label + ":\");", imp);
             }
-            case "LocalDate" -> {
+            case DATE -> {
                 imp.add("com.vaadin.flow.component.datepicker.DatePicker");
                 String var = "dp" + cap;
                 yield new Component("DatePicker", var, var + " = new DatePicker(\"" + label + ":\");", imp);
             }
-            case "LocalDateTime" -> {
+            case DATE_TIME -> {
                 imp.add("com.vaadin.flow.component.datetimepicker.DateTimePicker");
                 String var = "dtp" + cap;
                 yield new Component("DateTimePicker", var, var + " = new DateTimePicker(\"" + label + ":\");", imp);
             }
-            case "LocalTime" -> {
+            case TIME -> {
                 imp.add("com.vaadin.flow.component.timepicker.TimePicker");
                 String var = "tp" + cap;
                 yield new Component("TimePicker", var, var + " = new TimePicker(\"" + label + ":\");", imp);
             }
-            default -> {
+            case COMBO -> {
+                imp.add("com.vaadin.flow.component.combobox.ComboBox");
+                String var = "cb" + cap;
+                yield new Component("ComboBox<" + boxedType(f.typeSimpleName()) + ">", var,
+                        var + " = new ComboBox<>(\"" + label + ":\");", imp);
+            }
+            case AUTO, TEXT -> {
                 imp.add("com.vaadin.flow.component.textfield.TextField");
                 String var = "tf" + cap;
                 yield new Component("TextField", var, var + " = new TextField(\"" + label + ":\");", imp);
             }
+        };
+    }
+
+    public static String editorName(BABjField field) {
+        return resolvedEditorKind(field).toString();
+    }
+
+    private static BABjField.EditorKind resolvedEditorKind(BABjField field) {
+        if (field.isAssociation() || field.kind() == BABjField.Kind.ENUM) {
+            return BABjField.EditorKind.COMBO;
+        }
+        if (field.editorKind() != BABjField.EditorKind.AUTO) {
+            return field.editorKind();
+        }
+        return switch (field.typeSimpleName()) {
+            case "boolean", "Boolean" -> BABjField.EditorKind.CHECKBOX;
+            case "int", "Integer", "long", "Long", "short", "Short" ->
+                    BABjField.EditorKind.INTEGER;
+            case "double", "Double", "float", "Float", "BigDecimal" ->
+                    BABjField.EditorKind.NUMBER;
+            case "LocalDate" -> BABjField.EditorKind.DATE;
+            case "LocalDateTime" -> BABjField.EditorKind.DATE_TIME;
+            case "LocalTime" -> BABjField.EditorKind.TIME;
+            default -> BABjField.EditorKind.TEXT;
+        };
+    }
+
+    private static String boxedType(String type) {
+        return switch (type) {
+            case "boolean" -> "Boolean";
+            case "byte" -> "Byte";
+            case "short" -> "Short";
+            case "int" -> "Integer";
+            case "long" -> "Long";
+            case "float" -> "Float";
+            case "double" -> "Double";
+            case "char" -> "Character";
+            default -> type;
         };
     }
 

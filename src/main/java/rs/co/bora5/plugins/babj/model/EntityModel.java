@@ -11,6 +11,7 @@ import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiPrimitiveType;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.util.PsiUtil;
+import com.intellij.psi.util.InheritanceUtil;
 
 /**
  * Parses a JPA entity {@link PsiClass} into the metadata the generator needs: its name, package and
@@ -28,15 +29,20 @@ public final class EntityModel {
     };
     private static final String[] ENTITY = {"jakarta.persistence.Entity", "javax.persistence.Entity"};
     private static final String ABSTRACT_ENTITY = "rs.co.bora5.programs.bab.model.AbstractEntity";
+    private static final String REST_PUBLIC_ID =
+            "rs.co.bora5.programs.bab.model.interfaceCheck.RestPublicIdEntityInterface";
 
     private final String simpleName;
     private final String packageName;
     private final List<BABjField> fields;
+    private final boolean restPublicIdCapable;
 
-    private EntityModel(String simpleName, String packageName, List<BABjField> fields) {
+    private EntityModel(String simpleName, String packageName, List<BABjField> fields,
+                        boolean restPublicIdCapable) {
         this.simpleName = simpleName;
         this.packageName = packageName;
         this.fields = fields;
+        this.restPublicIdCapable = restPublicIdCapable;
     }
 
     public String getSimpleName() {
@@ -49,6 +55,10 @@ public final class EntityModel {
 
     public List<BABjField> getFields() {
         return fields;
+    }
+
+    public boolean isRestPublicIdCapable() {
+        return restPublicIdCapable;
     }
 
     /** Whether the class looks like a BABj entity: a JPA {@code @Entity} or an {@code AbstractEntity}. */
@@ -101,7 +111,8 @@ public final class EntityModel {
             fields.add(new BABjField(name, BABjField.Kind.SIMPLE, simpleTypeName(type, tc), importFqn(type, tc), null));
         }
 
-        return new EntityModel(psiClass.getName(), pkg, fields);
+        return new EntityModel(psiClass.getName(), pkg, fields,
+                InheritanceUtil.isInheritor(psiClass, REST_PUBLIC_ID));
     }
 
     /**

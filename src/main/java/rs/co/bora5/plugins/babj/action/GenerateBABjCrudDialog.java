@@ -8,6 +8,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.JComponent;
 import javax.swing.ListSelectionModel;
+import javax.swing.JPanel;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -16,10 +17,15 @@ import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.ValidationInfo;
 import com.intellij.psi.PsiNameHelper;
+import com.intellij.psi.JavaPsiFacade;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.util.InheritanceUtil;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextField;
+import com.intellij.ui.components.JBTabbedPane;
 import com.intellij.util.ui.FormBuilder;
 
 import rs.co.bora5.plugins.babj.model.BABjNaming;
@@ -34,6 +40,9 @@ import rs.co.bora5.plugins.babj.model.RolesTypeResolver;
  */
 public class GenerateBABjCrudDialog extends DialogWrapper {
 
+    private static final String REST_HOME_INTERFACE =
+            "rs.co.bora5.programs.bab.session.interfaceCheck.RestPublicIdHomeInterface";
+
     private final EntityModel model;
     private final Project project;
     private final List<RolesTypeResolver.RolesType> discoveredRolesTypes;
@@ -47,11 +56,18 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
     private final JBTextField viewNameField;
     private final JBTextField routeField;
     private final JBTextField titleField;
+    private final JBTextField restPathField;
+    private final CrudFieldDesignerPanel fieldDesigner;
 
     private final JBCheckBox dtoCheck = new JBCheckBox("DTO (projection)", true);
     private final JBCheckBox homeCheck = new JBCheckBox("Home (EJB service)", true);
     private final JBCheckBox viewCheck = new JBCheckBox("View (grid)", true);
     private final JBCheckBox windowCheck = new JBCheckBox("EditWindow", true);
+    private final JBCheckBox exportCheck = new JBCheckBox("Enable View export", false);
+    private final JBCheckBox restCheck = new JBCheckBox("REST endpoint", false);
+    private final JBCheckBox csvCheck = new JBCheckBox("CSV import window", false);
+    private final JBCheckBox xlsCheck = new JBCheckBox("Excel import window", false);
+    private final JBCheckBox reportCheck = new JBCheckBox("Report window", false);
 
     public GenerateBABjCrudDialog(@Nullable Project project, EntityModel model) {
         super(project);
@@ -77,6 +93,13 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
         viewNameField = new JBTextField(entity + "View");
         routeField = new JBTextField(BABjNaming.decapitalize(entity) + "View");
         titleField = new JBTextField(BABjNaming.label(entity));
+        restPathField = new JBTextField("/" + BABjNaming.decapitalize(entity));
+        fieldDesigner = new CrudFieldDesignerPanel(model.getFields());
+        restCheck.setEnabled(model.isRestPublicIdCapable());
+        if (!model.isRestPublicIdCapable()) {
+            restCheck.setToolTipText(
+                    "The entity must implement RestPublicIdEntityInterface to generate an endpoint.");
+        }
 
         setTitle("BABj CRUD generator — " + entity);
         init();
@@ -84,7 +107,7 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
 
     @Override
     protected @Nullable JComponent createCenterPanel() {
-        return FormBuilder.createFormBuilder()
+        JPanel settings = FormBuilder.createFormBuilder()
                 .addLabeledComponent("Base package:", basePackageField)
                 .addLabeledComponent("Operator (K) type:", kTypeField)
                 .addLabeledComponent("Roles class:", rolesTypeField)
@@ -98,7 +121,18 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
                 .addComponent(homeCheck)
                 .addComponent(viewCheck)
                 .addComponent(windowCheck)
+                .addComponent(exportCheck)
+                .addSeparator()
+                .addComponent(restCheck)
+                .addLabeledComponent("REST path:", restPathField)
+                .addComponent(csvCheck)
+                .addComponent(xlsCheck)
+                .addComponent(reportCheck)
                 .getPanel();
+        JBTabbedPane tabs = new JBTabbedPane();
+        tabs.addTab("Artifacts", settings);
+        tabs.addTab("CRUD Designer", fieldDesigner);
+        return tabs;
     }
 
     @Override
@@ -130,8 +164,34 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
             return new ValidationInfo("View class name is required.", viewNameField);
         }
         if (!dtoCheck.isSelected() && !homeCheck.isSelected()
-                && !viewCheck.isSelected() && !windowCheck.isSelected()) {
+                && !viewCheck.isSelected() && !windowCheck.isSelected()
+                && !restCheck.isSelected() && !csvCheck.isSelected()
+                && !xlsCheck.isSelected() && !reportCheck.isSelected()) {
             return new ValidationInfo("Select at least one artifact to generate.", dtoCheck);
+        }
+        if (restCheck.isSelected() && !model.isRestPublicIdCapable()) {
+            return new ValidationInfo(
+                    "REST generation requires RestPublicIdEntityInterface.", restCheck);
+        }
+        if (restCheck.isSelected() && restPathField.getText().isBlank()) {
+            return new ValidationInfo("REST path is required.", restPathField);
+        }
+        if (restCheck.isSelected() && project != null) {
+            String homeFqn = basePackageField.getText().trim() + ".sesion."
+                    + model.getSimpleName() + "Home";
+            PsiClass existingHome = JavaPsiFacade.getInstance(project)
+                    .findClass(homeFqn, GlobalSearchScope.projectScope(project));
+            if (existingHome == null && !homeCheck.isSelected()) {
+                return new ValidationInfo(
+                        "Generate Home together with REST, or provide an existing compatible Home.",
+                        homeCheck);
+            }
+            if (existingHome != null
+                    && !InheritanceUtil.isInheritor(existingHome, REST_HOME_INTERFACE)) {
+                return new ValidationInfo(
+                        "The existing Home must implement RestPublicIdHomeInterface before an endpoint can be generated.",
+                        restCheck);
+            }
         }
         return null;
     }
@@ -147,11 +207,17 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
                 viewNameField.getText().trim(),
                 routeField.getText().trim(),
                 titleField.getText().trim(),
-                model.getFields(),
+                fieldDesigner.selectedFields(),
                 dtoCheck.isSelected(),
                 homeCheck.isSelected(),
                 viewCheck.isSelected(),
-                windowCheck.isSelected());
+                windowCheck.isSelected(),
+                exportCheck.isSelected(),
+                restCheck.isSelected(),
+                restPathField.getText().trim(),
+                csvCheck.isSelected(),
+                xlsCheck.isSelected(),
+                reportCheck.isSelected());
     }
 
     private void refreshRoles() {

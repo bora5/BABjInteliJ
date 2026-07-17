@@ -10,7 +10,13 @@ import java.math.BigDecimal;
  * @param typeFqn  Fully-qualified name to import for {@link #typeSimpleName}, or {@code null} when none is needed.
  * @param displayProperty  For {@link Kind#ASSOCIATION}: the display property projected in the grid (default {@code naziv}).
  */
-public record BABjField(String name, Kind kind, String typeSimpleName, String typeFqn, String displayProperty) {
+public record BABjField(String name, Kind kind, String typeSimpleName, String typeFqn,
+                        String displayProperty, EditorKind editorKind) {
+
+    public BABjField(String name, Kind kind, String typeSimpleName, String typeFqn,
+                     String displayProperty) {
+        this(name, kind, typeSimpleName, typeFqn, displayProperty, EditorKind.AUTO);
+    }
 
     /** How the property is rendered across the generated artifacts. */
     public enum Kind {
@@ -20,6 +26,34 @@ public record BABjField(String name, Kind kind, String typeSimpleName, String ty
         ENUM,
         /** Single-valued association — projected as {@code alias.display} and edited via a combo box. */
         ASSOCIATION
+    }
+
+    /** Optional edit-window control override selected in CRUD Designer. */
+    public enum EditorKind {
+        AUTO("Automatic"),
+        TEXT("Text field"),
+        INTEGER("Integer field"),
+        NUMBER("Number field"),
+        CHECKBOX("Checkbox"),
+        DATE("Date picker"),
+        DATE_TIME("Date/time picker"),
+        TIME("Time picker"),
+        COMBO("Combo box");
+
+        private final String displayName;
+
+        EditorKind(String displayName) {
+            this.displayName = displayName;
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
+    }
+
+    public BABjField withEditor(EditorKind editor) {
+        return new BABjField(name, kind, typeSimpleName, typeFqn, displayProperty, editor);
     }
 
     public boolean isAssociation() {

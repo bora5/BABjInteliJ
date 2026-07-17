@@ -17,6 +17,12 @@
               Home, View, and EditWindow module.</li>
           <li><b>Smart completion</b> — suggests valid entity properties and complete column
               definitions inside BABj annotations.</li>
+          <li><b>CRUD Designer</b> — selects and orders fields, chooses edit controls, and previews
+              the generated grid and form.</li>
+          <li><b>Extended generators</b> — scaffolds REST endpoints, CSV/Excel imports, reports,
+              and export-enabled views.</li>
+          <li><b>Agent Studio</b> — visualizes static event routing, safety criteria, and actions,
+              with an event-reaction simulator.</li>
         </ul>
         ]]></description>
 
@@ -34,6 +40,10 @@
                     anchor="right"
                     icon="/icons/babjNavigate.svg"
                     factoryClass="rs.co.bora5.plugins.babj.navigation.BABjNavigatorToolWindowFactory"/>
+        <toolWindow id="BABj Agent Studio"
+                    anchor="right"
+                    icon="/icons/babjNavigate.svg"
+                    factoryClass="rs.co.bora5.plugins.babj.agent.BABjAgentStudioToolWindowFactory"/>
 
         <localInspection language="JAVA"
                          shortName="BABjMissingEditWindow"
@@ -72,8 +82,8 @@
         <action id="BABj.GenerateCrud"
                 class="rs.co.bora5.plugins.babj.action.GenerateBABjCrudAction"
                 icon="/icons/babjAction.svg"
-                text="BABj CRUD (DTO, Home, View, Window)"
-                description="Generates the BABj DTO, Home, View, and EditWindow from the selected JPA entity">
+                text="BABj Code Generator"
+                description="Designs and generates BABj CRUD, REST, import, export, and report artifacts from the selected JPA entity">
             <add-to-group group-id="GenerateGroup" anchor="last"/>
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </action>

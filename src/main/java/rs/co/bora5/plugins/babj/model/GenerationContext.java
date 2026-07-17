@@ -24,12 +24,20 @@ public final class GenerationContext {
     private final boolean generateHome;
     private final boolean generateView;
     private final boolean generateWindow;
+    private final boolean enableExport;
+    private final boolean generateRest;
+    private final String restPath;
+    private final boolean generateCsvImport;
+    private final boolean generateXlsImport;
+    private final boolean generateReport;
 
     public GenerationContext(String basePackage, String entityName, String kType,
                              String rolesType, String rolesTypeFqn, List<String> roles,
                              String viewName, String route, String pageTitle, List<BABjField> fields,
                              boolean generateDto, boolean generateHome, boolean generateView,
-                             boolean generateWindow) {
+                             boolean generateWindow, boolean enableExport, boolean generateRest,
+                             String restPath, boolean generateCsvImport, boolean generateXlsImport,
+                             boolean generateReport) {
         this.basePackage = basePackage;
         this.entityName = entityName;
         this.kType = kType;
@@ -44,6 +52,12 @@ public final class GenerationContext {
         this.generateHome = generateHome;
         this.generateView = generateView;
         this.generateWindow = generateWindow;
+        this.enableExport = enableExport;
+        this.generateRest = generateRest;
+        this.restPath = restPath;
+        this.generateCsvImport = generateCsvImport;
+        this.generateXlsImport = generateXlsImport;
+        this.generateReport = generateReport;
     }
 
     public String getBasePackage() {
@@ -102,6 +116,30 @@ public final class GenerationContext {
         return generateWindow;
     }
 
+    public boolean isEnableExport() {
+        return enableExport;
+    }
+
+    public boolean isGenerateRest() {
+        return generateRest;
+    }
+
+    public String getRestPath() {
+        return restPath;
+    }
+
+    public boolean isGenerateCsvImport() {
+        return generateCsvImport;
+    }
+
+    public boolean isGenerateXlsImport() {
+        return generateXlsImport;
+    }
+
+    public boolean isGenerateReport() {
+        return generateReport;
+    }
+
     // Package helpers -------------------------------------------------------
 
     public String dtoPackage() {
@@ -122,5 +160,9 @@ public final class GenerationContext {
 
     public String modelPackage() {
         return basePackage + ".model";
+    }
+
+    public String restPackage() {
+        return basePackage + ".sesion.rest";
     }
 }

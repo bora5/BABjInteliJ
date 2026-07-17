@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+### Added — extended BABj tooling
+
+- Added a visual CRUD Designer with field selection, ordering, Vaadin editor overrides, and live
+  grid/form previews.
+- Added a type-safe REST endpoint generator for entities implementing
+  `RestPublicIdEntityInterface`; generated Home services implement the matching BABj REST contract.
+- Added CSV and Excel import-window scaffolds, report-window scaffolds, and optional View export.
+- Added **BABj Agent Studio**, a static event → agent → safety criterion → action topology browser
+  with event-reaction simulation and source navigation.
+- Raised the plugin version to **1.2.0**.
+
 ### Added — BABj navigation and completion
 
 - Added gutter navigation between related Entity, DTO, Home, View, and EditWindow classes.
