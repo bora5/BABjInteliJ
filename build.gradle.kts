@@ -24,6 +24,11 @@ java {
 
 intellijPlatform {
     pluginConfiguration {
-        ideaVersion { sinceBuild = "243" }
+        ideaVersion {
+            sinceBuild = "243"
+            // No upper bound: the plugin uses only stable APIs, so let it load on
+            // current IDEs (e.g. 2026.2 / build 262) and future ones without a rebuild.
+            untilBuild = provider { null }
+        }
     }
 }
