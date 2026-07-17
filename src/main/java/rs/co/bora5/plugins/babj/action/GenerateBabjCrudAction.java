@@ -37,14 +37,22 @@ public class GenerateBabjCrudAction extends AnAction {
 
     @Override
     public void update(@NotNull AnActionEvent e) {
-        e.getPresentation().setEnabledAndVisible(findEntityClass(e) != null);
+        // Always available in a Java file; whether the file actually holds an entity is validated on
+        // invocation (with clear feedback), so the action is never silently hidden from Generate.
+        e.getPresentation().setEnabledAndVisible(e.getData(CommonDataKeys.PSI_FILE) instanceof PsiJavaFile);
     }
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
         Project project = e.getProject();
+        if (project == null) {
+            return;
+        }
         PsiClass entityClass = findEntityClass(e);
-        if (project == null || entityClass == null) {
+        if (entityClass == null) {
+            Messages.showInfoMessage(project,
+                    "U ovom fajlu nije pronađen JPA entitet (klasa sa @Entity ili naslednik AbstractEntity).",
+                    "BABj CRUD Generator");
             return;
         }
 
@@ -97,13 +105,24 @@ public class GenerateBabjCrudAction extends AnAction {
     }
 
     private static PsiClass findEntityClass(AnActionEvent e) {
-        PsiFile file = e.getData(CommonDataKeys.PSI_FILE);
-        Editor editor = e.getData(CommonDataKeys.EDITOR);
-        if (!(file instanceof PsiJavaFile) || editor == null) {
+        if (!(e.getData(CommonDataKeys.PSI_FILE) instanceof PsiJavaFile javaFile)) {
             return null;
         }
-        PsiElement at = file.findElementAt(editor.getCaretModel().getOffset());
-        PsiClass cls = PsiTreeUtil.getParentOfType(at, PsiClass.class);
-        return (EntityModel.isEntity(cls)) ? cls : null;
+        // Prefer the class under the caret.
+        Editor editor = e.getData(CommonDataKeys.EDITOR);
+        if (editor != null) {
+            PsiElement at = javaFile.findElementAt(editor.getCaretModel().getOffset());
+            PsiClass cls = PsiTreeUtil.getParentOfType(at, PsiClass.class);
+            if (EntityModel.isEntity(cls)) {
+                return cls;
+            }
+        }
+        // Fall back to any entity declared in the file, regardless of caret position.
+        for (PsiClass cls : javaFile.getClasses()) {
+            if (EntityModel.isEntity(cls)) {
+                return cls;
+            }
+        }
+        return null;
     }
 }
