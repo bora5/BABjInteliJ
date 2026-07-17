@@ -30,8 +30,10 @@ intellijPlatform {
     pluginConfiguration {
         ideaVersion {
             sinceBuild = "243"
-            // No upper bound: only stable APIs are used, so it loads on 2026.2 (262) and later.
-            untilBuild = provider { null }
+            // Explicit high upper bound so the plugin is compatible with 2026.2 (262) and well
+            // beyond. (Relying on provider{null} to drop the cap proved unreliable — it defaulted
+            // to the build platform's 243.*, which made the plugin "incompatible" on 262.)
+            untilBuild = "299.*"
         }
     }
 }
