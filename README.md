@@ -62,9 +62,9 @@ Distribucija: `.zip` iz `build/distributions/` se instalira preko
 ## Zahtevi
 
 - Build cilja IntelliJ IDEA **Ultimate 2026.2** (build 262).
-- Učitava se od build-a **243** naviše, bez gornje granice (koristi samo stabilne Java PSI API-je,
-  pa nema tvrde zavisnosti na Ultimate-only module).
-- Build na JDK **21**.
+- Učitava se od build-a **262** naviše, bez gornje granice.
+- Build na **JDK 25** (2026.2 platforma je kompajlirana za Javu 25; Gradle ga sam povlači preko
+  foojay resolver-a). Koristi samo stabilne Java PSI API-je (nema tvrde zavisnosti na Ultimate-only module).
 
 ## Struktura
 

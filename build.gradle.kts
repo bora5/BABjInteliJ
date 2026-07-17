@@ -20,14 +20,17 @@ dependencies {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        // IntelliJ 2026.2 platform jars are compiled for Java 25 (class file 69), so the plugin
+        // must be built with JDK 25 (Gradle auto-provisions it via the foojay resolver).
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            sinceBuild = "243"
+            // Java-25 bytecode won't load on older IDEs (JBR 21), so require 2026.2 (build 262)+.
+            sinceBuild = "262"
             untilBuild = provider { null }
         }
     }
