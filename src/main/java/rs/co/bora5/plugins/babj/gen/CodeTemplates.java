@@ -6,7 +6,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import rs.co.bora5.plugins.babj.model.BABjField;
-import rs.co.bora5.plugins.babj.model.BabjNaming;
+import rs.co.bora5.plugins.babj.model.BABjNaming;
 import rs.co.bora5.plugins.babj.model.GenerationContext;
 
 /**
@@ -63,7 +63,7 @@ public final class CodeTemplates {
 
         // accessors
         for (BABjField f : ctx.getFields()) {
-            String cap = BabjNaming.capitalize(f.name());
+            String cap = BABjNaming.capitalize(f.name());
             sb.append("\tpublic ").append(f.getDtoType()).append(" get").append(cap).append("() {\n");
             sb.append("\t\treturn ").append(f.name()).append(";\n");
             sb.append("\t}\n\n");
@@ -161,7 +161,7 @@ public final class CodeTemplates {
             if (!cols.isEmpty()) {
                 cols.append(',');
             }
-            String label = BabjNaming.label(f.name());
+            String label = BABjNaming.label(f.name());
             if (f.isAssociation()) {
                 cols.append('*').append(f.name()).append('.').append(f.displayProperty())
                         .append('~').append(f.name()).append('~').append(label);
@@ -221,7 +221,7 @@ public final class CodeTemplates {
                 if (injectedTypes.add(assoc)) {
                     injects.append("\t@Inject\n");
                     injects.append("\tprivate @Primary ").append(assoc).append("Home ")
-                            .append(BabjNaming.decapitalize(assoc)).append("EJB;\n\n");
+                            .append(BABjNaming.decapitalize(assoc)).append("EJB;\n\n");
                 }
             }
             if (f.kind() == BABjField.Kind.ENUM && f.typeFqn() != null) {
@@ -268,13 +268,13 @@ public final class CodeTemplates {
     }
 
     private static Component componentFor(BABjField f) {
-        String cap = BabjNaming.capitalize(f.name());
-        String label = BabjNaming.label(f.name());
+        String cap = BABjNaming.capitalize(f.name());
+        String label = BABjNaming.label(f.name());
         Set<String> imp = new LinkedHashSet<>();
 
         if (f.isAssociation()) {
             imp.add("com.vaadin.flow.component.combobox.ComboBox");
-            String assocDecap = BabjNaming.decapitalize(f.typeSimpleName());
+            String assocDecap = BABjNaming.decapitalize(f.typeSimpleName());
             String var = "cb" + cap;
             String init = var + " = createSimpleComboBox(\"" + label + ":\", " + assocDecap
                           + "EJB, \"" + f.displayProperty() + "\");";

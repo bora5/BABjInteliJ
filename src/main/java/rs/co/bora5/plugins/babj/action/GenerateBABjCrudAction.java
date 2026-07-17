@@ -19,7 +19,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.util.PsiTreeUtil;
 
-import rs.co.bora5.plugins.babj.gen.BabjGenerator;
+import rs.co.bora5.plugins.babj.gen.BABjGenerator;
 import rs.co.bora5.plugins.babj.model.EntityModel;
 import rs.co.bora5.plugins.babj.model.GenerationContext;
 
@@ -27,7 +27,7 @@ import rs.co.bora5.plugins.babj.model.GenerationContext;
  * "babj CRUD" generate action: from the JPA entity under the caret, produces the DTO / Home / View /
  * EditWindow quartet in the conventional sibling packages.
  */
-public class GenerateBabjCrudAction extends AnAction {
+public class GenerateBABjCrudAction extends AnAction {
 
     @Override
     public @NotNull ActionUpdateThread getActionUpdateThread() {
@@ -75,9 +75,9 @@ public class GenerateBabjCrudAction extends AnAction {
         }
         GenerationContext ctx = dialog.buildContext();
 
-        BabjGenerator.Result result = WriteCommandAction.writeCommandAction(project)
+        BABjGenerator.Result result = WriteCommandAction.writeCommandAction(project)
                 .withName("BABj CRUD Generator")
-                .compute(() -> BabjGenerator.generate(project, sourceRoot, ctx));
+                .compute(() -> BABjGenerator.generate(project, sourceRoot, ctx));
 
         if (result.fileToOpen() != null && result.fileToOpen().getVirtualFile() != null) {
             FileEditorManager.getInstance(project).openFile(result.fileToOpen().getVirtualFile(), true);
@@ -85,7 +85,7 @@ public class GenerateBabjCrudAction extends AnAction {
         report(project, result);
     }
 
-    private static void report(Project project, BabjGenerator.Result result) {
+    private static void report(Project project, BABjGenerator.Result result) {
         StringBuilder sb = new StringBuilder();
         if (!result.created().isEmpty()) {
             sb.append("Kreirano:\n");

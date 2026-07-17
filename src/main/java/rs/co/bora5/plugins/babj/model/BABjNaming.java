@@ -4,9 +4,9 @@ package rs.co.bora5.plugins.babj.model;
  * Small naming helpers shared by the generator: humanising field names into labels, decapitalising
  * identifiers, and deriving the project's base package from an entity's package.
  */
-public final class BabjNaming {
+public final class BABjNaming {
 
-    private BabjNaming() {
+    private BABjNaming() {
     }
 
     /**

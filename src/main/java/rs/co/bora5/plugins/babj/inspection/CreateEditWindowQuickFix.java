@@ -13,8 +13,8 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 
-import rs.co.bora5.plugins.babj.gen.BabjGenerator;
-import rs.co.bora5.plugins.babj.model.BabjNaming;
+import rs.co.bora5.plugins.babj.gen.BABjGenerator;
+import rs.co.bora5.plugins.babj.model.BABjNaming;
 import rs.co.bora5.plugins.babj.model.EntityModel;
 import rs.co.bora5.plugins.babj.model.GenerationContext;
 import rs.co.bora5.plugins.babj.model.OperaterTypeResolver;
@@ -67,13 +67,13 @@ public class CreateEditWindowQuickFix implements LocalQuickFix {
         }
 
         EntityModel model = EntityModel.from(entity);
-        String base = BabjNaming.basePackage(model.getPackageName());
+        String base = BABjNaming.basePackage(model.getPackageName());
         GenerationContext ctx = new GenerationContext(
                 base, model.getSimpleName(), OperaterTypeResolver.resolve(project), "ADMIN",
-                model.getSimpleName() + "View", BabjNaming.decapitalize(model.getSimpleName()) + "View",
-                BabjNaming.label(model.getSimpleName()), model.getFields(),
+                model.getSimpleName() + "View", BABjNaming.decapitalize(model.getSimpleName()) + "View",
+                BABjNaming.label(model.getSimpleName()), model.getFields(),
                 false, false, false, true);
 
-        BabjGenerator.generate(project, sourceRoot, ctx);
+        BABjGenerator.generate(project, sourceRoot, ctx);
     }
 }

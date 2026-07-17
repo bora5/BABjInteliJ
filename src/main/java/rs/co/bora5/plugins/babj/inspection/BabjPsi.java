@@ -17,7 +17,7 @@ import com.intellij.psi.PsiType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtil;
 
-import rs.co.bora5.plugins.babj.model.BabjNaming;
+import rs.co.bora5.plugins.babj.model.BABjNaming;
 
 /**
  * Shared PSI helpers for the babj inspections: resolving a subclass' generic type arguments,
@@ -52,7 +52,7 @@ final class BabjPsi {
         if (owner.findFieldByName(name, true) != null) {
             return false;
         }
-        String cap = BabjNaming.capitalize(name);
+        String cap = BABjNaming.capitalize(name);
         return owner.findMethodsByName("get" + cap, true).length == 0
                && owner.findMethodsByName("is" + cap, true).length == 0;
     }
@@ -64,7 +64,7 @@ final class BabjPsi {
         if (field != null) {
             type = field.getType();
         } else {
-            String cap = BabjNaming.capitalize(name);
+            String cap = BABjNaming.capitalize(name);
             PsiMethod[] getters = owner.findMethodsByName("get" + cap, true);
             if (getters.length == 0) {
                 getters = owner.findMethodsByName("is" + cap, true);

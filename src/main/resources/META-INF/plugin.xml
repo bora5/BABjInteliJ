@@ -1,14 +1,14 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>rs.co.bora5.plugins.BABjInteliJ</id>
-    <name>BABj Support</name>
+    <name>BABj</name>
     <vendor url="https://bora5.co.rs">bora5</vendor>
 
     <description><![CDATA[
-        Razvojna podrška za <b>babj</b> biblioteku (rs.co.bora5.programs.bab).<br>
+        Razvojna podrška za <b>BABj</b> biblioteku (rs.co.bora5.programs.bab).<br>
         <ul>
           <li><b>Generator</b> — iz JPA entiteta napravi kvartet DTO / Home / View / EditWindow
-              po babj konvencijama (Alt+Insert &rarr; <i>babj CRUD</i>).</li>
+              po BABj konvencijama (Alt+Insert &rarr; <i>BABj CRUD</i>).</li>
           <li><b>Live templates</b> — <code>bview</code>, <code>bwin</code>, <code>bhome</code>,
               <code>bdto</code>.</li>
           <li><b>Inspekcija</b> — upozorava kad GenericView nema prateći Edit&lt;Entity&gt;Window
@@ -20,41 +20,40 @@
     <depends>com.intellij.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <defaultLiveTemplates file="/liveTemplates/babj.xml"/>
+        <defaultLiveTemplates file="/liveTemplates/BABj.xml"/>
 
         <localInspection language="JAVA"
-                         shortName="BabjMissingEditWindow"
-                         displayName="babj: GenericView bez Edit prozora"
-                         groupName="babj"
+                         shortName="BABjMissingEditWindow"
+                         displayName="BABj: GenericView bez Edit prozora"
+                         groupName="BABj"
                          enabledByDefault="true"
                          level="WARNING"
                          implementationClass="rs.co.bora5.plugins.babj.inspection.MissingEditWindowInspection"/>
 
         <localInspection language="JAVA"
-                         shortName="BabjHomeSelect"
-                         displayName="babj: provera polja u getSelect (uz getJoin alias-e)"
-                         groupName="babj"
+                         shortName="BABjHomeSelect"
+                         displayName="BABj: provera polja u getSelect (uz getJoin alias-e)"
+                         groupName="BABj"
                          enabledByDefault="true"
                          level="WARNING"
                          implementationClass="rs.co.bora5.plugins.babj.inspection.HomeSelectInspection"/>
 
         <localInspection language="JAVA"
-                         shortName="BabjColumnNames"
-                         displayName="babj: provera @ColumnNames (entitet + DTO servisa)"
-                         groupName="babj"
+                         shortName="BABjColumnNames"
+                         displayName="BABj: provera @ColumnNames (entitet + DTO servisa)"
+                         groupName="BABj"
                          enabledByDefault="true"
                          level="WARNING"
                          implementationClass="rs.co.bora5.plugins.babj.inspection.ColumnNamesInspection"/>
     </extensions>
 
     <actions>
-        <action id="babj.GenerateCrud"
-                class="rs.co.bora5.plugins.babj.action.GenerateBabjCrudAction"
-                text="babj CRUD (DTO, Home, View, Window)"
-                description="Generiše babj kvartet iz izabranog JPA entiteta">
+        <action id="BABj.GenerateCrud"
+                class="rs.co.bora5.plugins.babj.action.GenerateBABjCrudAction"
+                text="BABj CRUD (DTO, Home, View, Window)"
+                description="Generiše BABj kvartet iz izabranog JPA entiteta">
             <add-to-group group-id="GenerateGroup" anchor="last"/>
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
-            <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
     </actions>
 </idea-plugin>

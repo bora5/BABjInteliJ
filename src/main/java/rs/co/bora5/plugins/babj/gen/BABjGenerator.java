@@ -13,9 +13,9 @@ import rs.co.bora5.plugins.babj.model.GenerationContext;
 /**
  * Orchestrates writing the selected babj artifacts for one entity. Must run inside a write action.
  */
-public final class BabjGenerator {
+public final class BABjGenerator {
 
-    private BabjGenerator() {
+    private BABjGenerator() {
     }
 
     /** Outcome of a generation run: which files were created, which were skipped, and what to open. */

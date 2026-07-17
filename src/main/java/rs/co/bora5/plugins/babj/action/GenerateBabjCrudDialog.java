@@ -11,7 +11,7 @@ import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 
-import rs.co.bora5.plugins.babj.model.BabjNaming;
+import rs.co.bora5.plugins.babj.model.BABjNaming;
 import rs.co.bora5.plugins.babj.model.EntityModel;
 import rs.co.bora5.plugins.babj.model.GenerationContext;
 import rs.co.bora5.plugins.babj.model.OperaterTypeResolver;
@@ -41,14 +41,14 @@ public class GenerateBabjCrudDialog extends DialogWrapper {
         this.model = model;
 
         String entity = model.getSimpleName();
-        basePackageField = new JBTextField(BabjNaming.basePackage(model.getPackageName()));
+        basePackageField = new JBTextField(BABjNaming.basePackage(model.getPackageName()));
         kTypeField = new JBTextField(OperaterTypeResolver.resolve(project));
         roleField = new JBTextField("ADMIN");
         viewNameField = new JBTextField(entity + "View");
-        routeField = new JBTextField(BabjNaming.decapitalize(entity) + "View");
-        titleField = new JBTextField(BabjNaming.label(entity));
+        routeField = new JBTextField(BABjNaming.decapitalize(entity) + "View");
+        titleField = new JBTextField(BABjNaming.label(entity));
 
-        setTitle("babj CRUD generator — " + entity);
+        setTitle("BABj CRUD generator — " + entity);
         init();
     }
 
