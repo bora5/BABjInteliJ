@@ -47,8 +47,8 @@ final class BabjPsi {
         return null;
     }
 
-    /** Whether {@code owner} exposes a persistent property {@code name} — as a field or a getter. */
-    static boolean hasProperty(PsiClass owner, String name) {
+    /** Whether {@code owner} is missing property {@code name} — it has neither a field nor a getter for it. */
+    static boolean isMissingProperty(PsiClass owner, String name) {
         if (owner.findFieldByName(name, true) != null) {
             return false;
         }
@@ -89,7 +89,7 @@ final class BabjPsi {
             if (cur == null) {
                 return "ne mogu da razrešim tip za '" + seg + "'";
             }
-            if (hasProperty(cur, seg)) {
+            if (isMissingProperty(cur, seg)) {
                 return "'" + seg + "' nije polje entiteta " + cur.getName();
             }
             if (i < segs.length - 1) {
