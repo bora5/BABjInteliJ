@@ -276,7 +276,8 @@ public final class CodeTemplates {
             imp.add("com.vaadin.flow.component.combobox.ComboBox");
             String assocDecap = BabjNaming.decapitalize(f.getTypeSimpleName());
             String var = "cb" + cap;
-            String init = var + " = createSimpleComboBox(\"" + label + ":\", " + assocDecap + "EJB, \"naziv\");";
+            String init = var + " = createSimpleComboBox(\"" + label + ":\", " + assocDecap
+                    + "EJB, \"" + f.getDisplayProperty() + "\");";
             return new Component("ComboBox<" + f.getTypeSimpleName() + ">", var, init, imp);
         }
         if (f.getKind() == BabjField.Kind.ENUM) {

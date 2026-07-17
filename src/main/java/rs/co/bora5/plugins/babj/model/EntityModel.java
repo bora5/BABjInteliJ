@@ -88,7 +88,7 @@ public final class EntityModel {
                 PsiClass tc = PsiUtil.resolveClassInClassTypeOnly(type);
                 String simple = tc != null ? tc.getName() : type.getPresentableText();
                 String fqn = tc != null ? tc.getQualifiedName() : null;
-                fields.add(new BabjField(name, BabjField.Kind.ASSOCIATION, simple, fqn, "naziv"));
+                fields.add(new BabjField(name, BabjField.Kind.ASSOCIATION, simple, fqn, pickDisplayProperty(tc)));
                 continue;
             }
 
@@ -102,6 +102,32 @@ public final class EntityModel {
         }
 
         return new EntityModel(psiClass.getName(), pkg, fields);
+    }
+
+    /**
+     * Chooses the property to project for an association's grid column: prefers {@code naziv}, then
+     * {@code username} (operator-like entities), then the first {@code String} field, falling back
+     * to {@code naziv} when the target cannot be inspected.
+     */
+    private static String pickDisplayProperty(PsiClass target) {
+        if (target == null) {
+            return "naziv";
+        }
+        if (target.findFieldByName("naziv", true) != null) {
+            return "naziv";
+        }
+        if (target.findFieldByName("username", true) != null) {
+            return "username";
+        }
+        for (PsiField f : target.getAllFields()) {
+            if (f.hasModifierProperty(PsiModifier.STATIC) || "serialVersionUID".equals(f.getName())) {
+                continue;
+            }
+            if (f.getType().equalsToText("java.lang.String")) {
+                return f.getName();
+            }
+        }
+        return "naziv";
     }
 
     private static String simpleTypeName(PsiType type, PsiClass tc) {
