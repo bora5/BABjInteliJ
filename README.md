@@ -1,80 +1,81 @@
 # BABj Support — IntelliJ plugin
 
-Razvojna podrška za **BABj** biblioteku (`rs.co.bora5.programs.bab`). Automatizuje
-konvencije koje BABj nameće i skraćuje pisanje boilerplate-a.
+Development support for the **BABj** library (`rs.co.bora5.programs.bab`). The plugin automates
+BABj conventions and reduces repetitive boilerplate.
 
-## Šta radi
+## Features
 
-### 1. Generator kvarteta (glavna funkcija)
+### 1. CRUD quartet generator
 
-Iz JPA entiteta (`@Entity` / `AbstractEntity`) napravi četiri fajla u odgovarajućim
-paketima, po istim konvencijama koje se vide u `wastex` kodu:
+Starting from a JPA entity (`@Entity` or `AbstractEntity`), the generator creates four files in the
+conventional packages used by BABj projects:
 
-| Artefakt | Paket | Šta sadrži |
+| Artifact | Package | Contents |
 |---|---|---|
-| `<Entity>DTO` | `…front.views.projections` | Projekcija sa konstruktorom `(Long id, …)` + geteri/seteri; asocijacije se ravnaju u `String` |
-| `<Entity>Home` | `…sesion` | `@Stateless @LocalBean @Primary` servis sa `getSelect()` / `getJoin()` |
-| `<Entity>View` | `…front.views` | Deklarativni `GenericView` (`@EnableNew/Edit/Delete`, `@AdminTypes`, `@ColumnNames`, `@Route`) |
-| `Edit<Entity>Window` | `…front.windowses` | `GenericWindow` sa `@PropertyId` poljima i combo-box factory pozivima |
+| `<Entity>DTO` | `…front.views.projections` | Projection with a `(Long id, …)` constructor, getters, and setters; associations are flattened to `String` |
+| `<Entity>Home` | `…sesion` | `@Stateless @LocalBean @Primary` service with `getSelect()` and `getJoin()` |
+| `<Entity>View` | `…front.views` | Declarative `GenericView` with `@EnableNew/Edit/Delete`, `@AdminTypes`, `@ColumnNames`, and `@Route` |
+| `Edit<Entity>Window` | `…front.windowses` | `GenericWindow` with `@PropertyId` fields and combo-box factory calls |
 
-Generator prepoznaje tipove polja i mapira ih:
-- `@ManyToOne` / `@OneToOne` → `LEFT JOIN`, projekcija `alias.<display>`, `createSimpleComboBox(...)` u prozoru.
-  Display polje se **skenira sa ciljanog entiteta** (prednost `naziv`, pa `username`, pa prvo `String` polje);
-- `enum` → `ComboBox` napunjen iz `values()`;
-- `LocalDate/LocalDateTime/LocalTime`, brojevi, `boolean`, `String` → odgovarajuće Vaadin polje;
-- kolekcije (`@OneToMany`/`@ManyToMany`) se preskaču.
+The generator maps entity fields as follows:
 
-Operater (`K`) tip se auto-detektuje skeniranjem projekta za implementaciju
-`OperaterEntityInterface` (npr. `Korisnik`) i prefiluje u dijalogu.
+- `@ManyToOne` / `@OneToOne` → `LEFT JOIN`, an `alias.<display>` projection, and
+  `createSimpleComboBox(...)` in the edit window. The display property is discovered on the target
+  entity, preferring `naziv`, then `username`, then the first `String` field.
+- `enum` → a `ComboBox` populated from `values()`.
+- `LocalDate`, `LocalDateTime`, `LocalTime`, numbers, `boolean`, and `String` → matching Vaadin fields.
+- Collections (`@OneToMany` / `@ManyToMany`) are skipped.
 
-**Pokretanje:** kursor u entitetu → `Alt+Insert` (Generate) → **BABj CRUD (DTO, Home, View, Window)**.
-Otvori se dijalog sa unapred popunjenim parametrima (osnovni paket, `K` tip, rola,
-naziv view-a, ruta, naslov) i čekboksovima koji artefakti se generišu. Postojeći fajlovi
-se **ne** gaze.
+The operator (`K`) type is detected by scanning the project for an implementation of
+`OperaterEntityInterface` (for example, `Korisnik`) and is pre-filled in the dialog.
+
+**Run it:** place the caret in an entity, press `Alt+Insert` (Generate), and select
+**BABj CRUD (DTO, Home, View, Window)**. The dialog pre-fills the base package, operator type, role,
+view class name, route, and title, and lets you choose which artifacts to generate. Existing files
+are never overwritten.
 
 ### 2. Live templates
 
-`bview`, `bwin`, `bhome`, `bdto` — brzi skeleti za pojedinačne klase.
+`bview`, `bwin`, `bhome`, and `bdto` provide quick skeletons for individual BABj classes.
 
-### 3. Inspekcije
+### 3. Inspections
 
-- **Nedostajući Edit prozor** — upozorava kad `GenericView` nema prateći
-  `Edit<Entity>Window` (obavezno po konvenciji), sa quick-fix-om (`Alt+Enter`) koji ga generiše.
-- **Provera polja u `getSelect()`** — svaki `alias.polje` token u projekciji Home klase se
-  validira protiv stvarnih polja entiteta, uz razrešavanje alias-a iz `getJoin()`
-  (`x` = entitet; ostali alias-i iz `LEFT JOIN`-ova, uključujući ulančane join-ove).
-  Funkcije (`CONCAT(...)`) i literali se preskaču.
-- **Provera `@ColumnNames`** — putanja kolone (prvi `~`-token, uz `*` prefiks) se validira
-  protiv polja entiteta, a ključ (drugi `~`-token) protiv **DTO-a servisa** — tj. da je kolona
-  zaista „podržana iz servisa".
+- **Missing Edit window** reports a `GenericView` without its conventional
+  `Edit<Entity>Window` and provides an `Alt+Enter` quick fix to generate it.
+- **`getSelect()` field validation** checks every `alias.property` token against the entity model.
+  Alias `x` is the entity; additional aliases are resolved from `getJoin()`, including chained joins.
+  Functions such as `CONCAT(...)` and literals are ignored.
+- **`@ColumnNames` validation** checks each entity property path and verifies that the optional key
+  is available from the service DTO.
 
-## Pokretanje i build
+## Build and run
 
 ```bash
-./gradlew runIde          # diže sandbox IntelliJ sa plugin-om
-./gradlew buildPlugin     # pravi .zip u build/distributions/
-./gradlew verifyPlugin    # provera kompatibilnosti
+./gradlew runIde          # start a sandbox IntelliJ instance with the plugin
+./gradlew buildPlugin     # create the ZIP in build/distributions/
+./gradlew verifyPlugin    # run compatibility verification
 ```
 
-Distribucija: `.zip` iz `build/distributions/` se instalira preko
+Install the ZIP from `build/distributions/` using
 *Settings → Plugins → ⚙ → Install Plugin from Disk*.
 
-## Zahtevi
+## Requirements
 
-- Build cilja IntelliJ IDEA **Community 2024.3** (stabilno izdanje, gradi se na JDK 21).
-- Učitava se od build-a **243** naviše, bez gornje granice — koristi samo stabilne Java PSI API-je,
-  pa se instalira i radi i u aktuelnom **2026.2 / Ultimate**-u.
-- Build na **JDK 21**.
+- Built against IntelliJ IDEA Community **2024.3** on JDK 21.
+- Compatible with IntelliJ builds **243** through **299.***, including current Ultimate versions.
+- JDK 21 for local builds.
 
-## Struktura
+## Project structure
 
-```
+```text
 src/main/java/rs/co/bora5/plugins/babj/
-├── action/        GenerateBABjCrudAction + dijalog
-├── gen/           CodeTemplates (renderer) + writer/generator
-├── inspection/    MissingEditWindowInspection + quick-fix
-└── model/         parser entiteta (EntityModel), polja, naming, kontekst
+├── action/        GenerateBABjCrudAction and configuration dialog
+├── gen/           CodeTemplates renderer and file generator
+├── inspection/    BABj inspections and quick fixes
+└── model/         entity parser, field model, naming, and generation context
 src/main/resources/
-├── META-INF/plugin.xml
+├── META-INF/      plugin.xml and plugin icons
+├── icons/         action icons
+├── inspectionDescriptions/
 └── liveTemplates/BABj.xml
 ```

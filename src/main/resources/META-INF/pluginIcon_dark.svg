@@ -1,9 +1,9 @@
 <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="2" y="2" width="17" height="17" rx="5" fill="#7C5CFC"/>
-    <rect x="21" y="2" width="17" height="17" rx="5" fill="#4388F7"/>
-    <rect x="2" y="21" width="17" height="17" rx="5" fill="#20BFAF"/>
-    <rect x="21" y="21" width="17" height="17" rx="5" fill="#69B94F"/>
+    <rect x="2" y="2" width="17" height="17" rx="5" fill="#957BFF"/>
+    <rect x="21" y="2" width="17" height="17" rx="5" fill="#63A4FF"/>
+    <rect x="2" y="21" width="17" height="17" rx="5" fill="#38D9C8"/>
+    <rect x="21" y="21" width="17" height="17" rx="5" fill="#86D46B"/>
     <path fill-rule="evenodd" clip-rule="evenodd"
           d="M10 7.5H20.8C25.8 7.5 29 9.9 29 13.8C29 16.3 27.6 18.1 25.5 19.1C28.3 20.1 30 22.3 30 25.3C30 29.8 26.5 32.5 20.8 32.5H10V7.5ZM16 12.5V17.2H20.3C22.1 17.2 23.2 16.4 23.2 14.85C23.2 13.3 22.1 12.5 20.3 12.5H16ZM16 21.8V27.4H20.8C22.9 27.4 24.1 26.4 24.1 24.6C24.1 22.8 22.9 21.8 20.8 21.8H16Z"
-          fill="white"/>
+          fill="#FFFFFF"/>
 </svg>

@@ -56,12 +56,12 @@ public final class BABjGenerator {
                                  String text, List<String> created, List<String> skipped) {
         PsiDirectory dir = BABjWriter.findOrCreatePackageDir(project, sourceRoot, pkg);
         if (dir == null) {
-            skipped.add(fileName + " (paket se ne može kreirati)");
+            skipped.add(fileName + " (could not create the package)");
             return null;
         }
         PsiFile f = BABjWriter.writeJava(project, dir, fileName, text);
         if (f == null) {
-            skipped.add(fileName + " (već postoji)");
+            skipped.add(fileName + " (already exists)");
         } else {
             created.add(fileName);
         }

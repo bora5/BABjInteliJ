@@ -20,7 +20,7 @@ import com.intellij.psi.PsiLiteralExpression;
  * Validates a {@code GenericView}'s {@code @ColumnNames} entries. Each entry is
  * {@code property~key~Header}: the {@code property} path (optionally {@code *}-prefixed) must resolve
  * against the entity, and the {@code key} — when present — must be a property projected by the
- * service, i.e. a field of the view's DTO ("podržano iz servisa").
+ * service, i.e. a field of the view's DTO.
  */
 public class ColumnNamesInspection extends AbstractBaseJavaLocalInspectionTool {
 
@@ -61,15 +61,15 @@ public class ColumnNamesInspection extends AbstractBaseJavaLocalInspectionTool {
                 String error = BABjPsi.validatePath(entity, prop.split("\\."), 0);
                 if (error != null) {
                     problems.add(problem(manager, literal, isOnTheFly,
-                            "@ColumnNames: kolona '" + prop + "' — " + error + "."));
+                            "@ColumnNames: column '" + prop + "' — " + error + "."));
                 }
             }
 
             String key = parts.length > 1 ? parts[1].trim() : "";
             if (dto != null && IDENT.matcher(key).matches() && BABjPsi.isMissingProperty(dto, key)) {
                 problems.add(problem(manager, literal, isOnTheFly,
-                        "@ColumnNames: ključ '" + key + "' nije podržan iz servisa (nema polja '"
-                                + key + "' u DTO " + dto.getName() + ")."));
+                        "@ColumnNames: key '" + key + "' is not provided by the service (DTO "
+                                + dto.getName() + " has no '" + key + "' property)."));
             }
         }
 

@@ -34,7 +34,7 @@ public class CreateEditWindowQuickFix implements LocalQuickFix {
 
     @Override
     public @NotNull String getName() {
-        return "Generiši Edit" + entitySimpleName + "Window";
+        return "Generate Edit" + entitySimpleName + "Window";
     }
 
     @Override

@@ -59,15 +59,15 @@ public class HomeSelectInspection extends AbstractBaseJavaLocalInspectionTool {
             String alias = segs[0];
             if (!aliases.isKnown(alias)) {
                 problems.add(manager.createProblemDescriptor(selectLiteral,
-                        "getSelect: nepoznat alias '" + alias + "' u '" + token
-                                + "' (dozvoljeni su 'x' i alias-i iz getJoin).",
+                        "getSelect: unknown alias '" + alias + "' in '" + token
+                                + "' (allowed aliases are 'x' and aliases declared in getJoin).",
                         (LocalQuickFix) null, ProblemHighlightType.WARNING, isOnTheFly));
                 continue;
             }
             String error = BABjPsi.validatePath(aliases.classOf(alias), segs, 1);
             if (error != null) {
                 problems.add(manager.createProblemDescriptor(selectLiteral,
-                        "getSelect: u '" + token + "' — " + error + ".",
+                        "getSelect: in '" + token + "' — " + error + ".",
                         (LocalQuickFix) null, ProblemHighlightType.WARNING, isOnTheFly));
             }
         }
