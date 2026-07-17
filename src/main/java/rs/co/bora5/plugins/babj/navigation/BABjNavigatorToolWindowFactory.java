@@ -19,11 +19,15 @@ import javax.swing.tree.TreePath;
 import org.jetbrains.annotations.NotNull;
 
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.IconLoader;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.psi.PsiClass;
@@ -40,6 +44,7 @@ import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.tree.TreeUtil;
+import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.ide.util.PsiNavigationSupport;
 
 /** Creates the BABj module diagram shown in the IDE's right tool-window stripe. */
@@ -91,49 +96,73 @@ public class BABjNavigatorToolWindowFactory implements ToolWindowFactory, DumbAw
                 status.setText("BABj Navigator is available after indexing.");
                 return;
             }
-            PsiClass context = currentClass();
+            Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+            if (editor == null) {
+                applyScanResult(NavigatorScanResult.none());
+                return;
+            }
+            EditorSnapshot snapshot = new EditorSnapshot(
+                    editor.getDocument(), editor.getCaretModel().getOffset());
+            status.setText("Scanning BABj module…");
+            ReadAction.nonBlocking(() -> scanEditor(snapshot))
+                    .inSmartMode(project)
+                    .expireWith(project)
+                    .coalesceBy(this)
+                    .finishOnUiThread(ModalityState.any(), this::applyScanResult)
+                    .submit(AppExecutorUtil.getAppExecutorService());
+        }
+
+        private NavigatorScanResult scanEditor(EditorSnapshot snapshot) {
+            PsiClass context = currentClass(snapshot);
             PsiClass entity = BABjArtifactResolver.entityFor(context);
             if (context == null || entity == null) {
-                status.setText("Place the caret in a BABj Entity, DTO, Home, View, or Edit window.");
-                tree.setModel(new DefaultTreeModel(
-                        new DefaultMutableTreeNode("No BABj module selected")));
-                return;
+                return NavigatorScanResult.none();
             }
 
             List<BABjArtifactResolver.Artifact> artifacts =
                     BABjArtifactResolver.relatedArtifacts(context);
             Map<BABjArtifactRole, Integer> counts = new EnumMap<>(BABjArtifactRole.class);
-            DefaultMutableTreeNode root = new DefaultMutableTreeNode(
-                    new ArtifactNode("BABj module: " + entity.getName(), entity));
+            List<ArtifactDescriptor> nodes = new java.util.ArrayList<>();
 
             for (BABjArtifactResolver.Artifact artifact : artifacts) {
                 counts.merge(artifact.role(), 1, Integer::sum);
-                root.add(new DefaultMutableTreeNode(new ArtifactNode(
+                nodes.add(new ArtifactDescriptor(
                         artifact.role().getDisplayName() + " — " + artifact.psiClass().getName(),
-                        artifact.psiClass())));
+                        pointer(artifact.psiClass())));
             }
             for (BABjArtifactRole role : BABjArtifactRole.values()) {
                 if (!counts.containsKey(role)) {
-                    root.add(new DefaultMutableTreeNode(
-                            new ArtifactNode(role.getDisplayName() + " — not found", null)));
+                    nodes.add(new ArtifactDescriptor(
+                            role.getDisplayName() + " — not found", null));
                 }
             }
+            return new NavigatorScanResult(entity.getName(), pointer(entity), List.copyOf(nodes));
+        }
 
+        private void applyScanResult(NavigatorScanResult result) {
+            if (!result.found()) {
+                status.setText("Place the caret in a BABj Entity, DTO, Home, View, or Edit window.");
+                tree.setModel(new DefaultTreeModel(
+                        new DefaultMutableTreeNode("No BABj module selected")));
+                return;
+            }
+            DefaultMutableTreeNode root = new DefaultMutableTreeNode(new ArtifactNode(
+                    "BABj module: " + result.entityName(), result.entity()));
+            for (ArtifactDescriptor artifact : result.artifacts()) {
+                root.add(new DefaultMutableTreeNode(
+                        new ArtifactNode(artifact.label(), artifact.target())));
+            }
             status.setText("Double-click an artifact to open it.");
             tree.setModel(new DefaultTreeModel(root));
             TreeUtil.expandAll(tree);
         }
 
-        private PsiClass currentClass() {
-            Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-            if (editor == null) {
-                return null;
-            }
-            PsiFile file = PsiDocumentManager.getInstance(project).getPsiFile(editor.getDocument());
+        private PsiClass currentClass(EditorSnapshot snapshot) {
+            PsiFile file = PsiDocumentManager.getInstance(project).getPsiFile(snapshot.document());
             if (file == null) {
                 return null;
             }
-            PsiElement atCaret = file.findElementAt(editor.getCaretModel().getOffset());
+            PsiElement atCaret = file.findElementAt(snapshot.offset());
             PsiClass psiClass = PsiTreeUtil.getParentOfType(atCaret, PsiClass.class, false);
             if (psiClass == null && file instanceof PsiJavaFile javaFile
                     && javaFile.getClasses().length > 0) {
@@ -149,28 +178,41 @@ public class BABjNavigatorToolWindowFactory implements ToolWindowFactory, DumbAw
                     || !(node.getUserObject() instanceof ArtifactNode artifactNode)) {
                 return;
             }
-            PsiClass target = artifactNode.target();
-            if (target != null && target.isValid() && target.getContainingFile() != null
-                    && target.getContainingFile().getVirtualFile() != null) {
+            NavigationTarget navigation = ReadAction.compute(() -> {
+                PsiClass target = artifactNode.target();
+                if (target == null || !target.isValid() || target.getContainingFile() == null
+                        || target.getContainingFile().getVirtualFile() == null) {
+                    return null;
+                }
+                return new NavigationTarget(target.getContainingFile().getVirtualFile(),
+                        target.getTextOffset());
+            });
+            if (navigation != null) {
                 PsiNavigationSupport.getInstance().createNavigatable(
-                        project, target.getContainingFile().getVirtualFile(), target.getTextOffset())
+                        project, navigation.file(), navigation.offset())
                         .navigate(true);
             }
+        }
+
+        private SmartPsiElementPointer<PsiClass> pointer(PsiClass target) {
+            return SmartPointerManager.getInstance(project).createSmartPsiElementPointer(target);
         }
 
         private final class ArtifactNode {
             private final String label;
             private final SmartPsiElementPointer<PsiClass> pointer;
 
-            private ArtifactNode(String label, PsiClass target) {
+            private ArtifactNode(String label, SmartPsiElementPointer<PsiClass> pointer) {
                 this.label = label;
-                this.pointer = target == null ? null
-                        : SmartPointerManager.getInstance(project)
-                                .createSmartPsiElementPointer(target);
+                this.pointer = pointer;
             }
 
             private PsiClass target() {
                 return pointer == null ? null : pointer.getElement();
+            }
+
+            private boolean hasTarget() {
+                return pointer != null;
             }
 
             @Override
@@ -189,13 +231,35 @@ public class BABjNavigatorToolWindowFactory implements ToolWindowFactory, DumbAw
                 if (value instanceof DefaultMutableTreeNode node
                         && node.getUserObject() instanceof ArtifactNode artifactNode) {
                     setText(artifactNode.toString());
-                    if (artifactNode.target() != null) {
+                    if (artifactNode.hasTarget()) {
                         setIcon(IconLoader.getIcon(
                                 "/icons/babjNavigate.svg", BABjNavigatorToolWindowFactory.class));
                     }
                 }
                 return component;
             }
+        }
+
+        private record EditorSnapshot(Document document, int offset) {
+        }
+
+        private record ArtifactDescriptor(String label,
+                                          SmartPsiElementPointer<PsiClass> target) {
+        }
+
+        private record NavigatorScanResult(String entityName,
+                                           SmartPsiElementPointer<PsiClass> entity,
+                                           List<ArtifactDescriptor> artifacts) {
+            private static NavigatorScanResult none() {
+                return new NavigatorScanResult(null, null, List.of());
+            }
+
+            private boolean found() {
+                return entity != null;
+            }
+        }
+
+        private record NavigationTarget(VirtualFile file, int offset) {
         }
     }
 }

@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Agent Studio and BABj Navigator now scan PSI in non-blocking read actions instead of directly on
+  the Swing event-dispatch thread, preventing `Read access is allowed from inside read-action only`
+  exceptions and avoiding UI freezes on larger projects.
+- Tool-window tree rendering uses immutable scan snapshots; PSI is resolved only inside guarded
+  read actions when the user navigates to source.
+
 ### Changed
 
 - Association fields whose type inherits BAB `AbstractEntity` are now detected even when their JPA
