@@ -52,7 +52,7 @@ public class GenerateBABjCrudAction extends AnAction {
         PsiClass entityClass = findEntityClass(e);
         if (entityClass == null) {
             Messages.showInfoMessage(project,
-                    "U ovom fajlu nije pronađen JPA entitet (klasa sa @Entity ili naslednik AbstractEntity).",
+                    "No JPA entity was found in this file (a class annotated with @Entity or extending AbstractEntity).",
                     "BABj CRUD Generator");
             return;
         }
@@ -65,7 +65,7 @@ public class GenerateBABjCrudAction extends AnAction {
         VirtualFile sourceRoot = ProjectFileIndex.getInstance(project).getSourceRootForFile(entityVFile);
         if (sourceRoot == null) {
             Messages.showErrorDialog(project,
-                    "Izvorni koren (source root) za entitet nije pronađen.", "BABj CRUD Generator");
+                    "Could not find the source root for the entity.", "BABj CRUD Generator");
             return;
         }
 
@@ -89,18 +89,18 @@ public class GenerateBABjCrudAction extends AnAction {
     private static void report(Project project, BABjGenerator.Result result) {
         StringBuilder sb = new StringBuilder();
         if (!result.created().isEmpty()) {
-            sb.append("Kreirano:\n");
+            sb.append("Created:\n");
             result.created().forEach(n -> sb.append("  • ").append(n).append('\n'));
         }
         if (!result.skipped().isEmpty()) {
             if (!sb.isEmpty()) {
                 sb.append('\n');
             }
-            sb.append("Preskočeno:\n");
+            sb.append("Skipped:\n");
             result.skipped().forEach(n -> sb.append("  • ").append(n).append('\n'));
         }
         if (sb.isEmpty()) {
-            sb.append("Ništa nije generisano.");
+            sb.append("Nothing was generated.");
         }
         Messages.showInfoMessage(project, sb.toString(), "BABj CRUD Generator");
     }

@@ -31,10 +31,10 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
     private final JBTextField routeField;
     private final JBTextField titleField;
 
-    private final JBCheckBox dtoCheck = new JBCheckBox("DTO (projekcija)", true);
-    private final JBCheckBox homeCheck = new JBCheckBox("Home (EJB servis)", true);
+    private final JBCheckBox dtoCheck = new JBCheckBox("DTO (projection)", true);
+    private final JBCheckBox homeCheck = new JBCheckBox("Home (EJB service)", true);
     private final JBCheckBox viewCheck = new JBCheckBox("View (grid)", true);
-    private final JBCheckBox windowCheck = new JBCheckBox("EditWindow (prozor)", true);
+    private final JBCheckBox windowCheck = new JBCheckBox("EditWindow", true);
 
     public GenerateBABjCrudDialog(@Nullable Project project, EntityModel model) {
         super(project);
@@ -55,12 +55,12 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
     @Override
     protected @Nullable JComponent createCenterPanel() {
         return FormBuilder.createFormBuilder()
-                .addLabeledComponent("Osnovni paket:", basePackageField)
-                .addLabeledComponent("Operater (K) tip:", kTypeField)
-                .addLabeledComponent("Rola (Roles.___):", roleField)
-                .addLabeledComponent("Naziv View klase:", viewNameField)
-                .addLabeledComponent("Ruta:", routeField)
-                .addLabeledComponent("Naslov stranice:", titleField)
+                .addLabeledComponent("Base package:", basePackageField)
+                .addLabeledComponent("Operator (K) type:", kTypeField)
+                .addLabeledComponent("Role (Roles.___):", roleField)
+                .addLabeledComponent("View class name:", viewNameField)
+                .addLabeledComponent("Route:", routeField)
+                .addLabeledComponent("Page title:", titleField)
                 .addSeparator()
                 .addComponent(dtoCheck)
                 .addComponent(homeCheck)
@@ -72,17 +72,17 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
     @Override
     protected @Nullable ValidationInfo doValidate() {
         if (basePackageField.getText().isBlank()) {
-            return new ValidationInfo("Osnovni paket je obavezan.", basePackageField);
+            return new ValidationInfo("Base package is required.", basePackageField);
         }
         if (kTypeField.getText().isBlank()) {
-            return new ValidationInfo("Operater (K) tip je obavezan.", kTypeField);
+            return new ValidationInfo("Operator (K) type is required.", kTypeField);
         }
         if (viewCheck.isSelected() && viewNameField.getText().isBlank()) {
-            return new ValidationInfo("Naziv View klase je obavezan.", viewNameField);
+            return new ValidationInfo("View class name is required.", viewNameField);
         }
         if (!dtoCheck.isSelected() && !homeCheck.isSelected()
                 && !viewCheck.isSelected() && !windowCheck.isSelected()) {
-            return new ValidationInfo("Izaberite bar jedan artefakt.", dtoCheck);
+            return new ValidationInfo("Select at least one artifact to generate.", dtoCheck);
         }
         return null;
     }

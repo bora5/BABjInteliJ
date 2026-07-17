@@ -48,7 +48,7 @@ public class MissingEditWindowInspection extends AbstractBaseJavaLocalInspection
 
         ProblemDescriptor problem = manager.createProblemDescriptor(
                 anchor,
-                "Nedostaje " + expected + " — po BABj konvenciji svaki editabilni GenericView ima svoj Edit prozor.",
+                "Missing " + expected + " — BABj convention requires every editable GenericView to have a matching Edit window.",
                 new CreateEditWindowQuickFix(entity.getName(), entity.getQualifiedName()),
                 ProblemHighlightType.WARNING,
                 isOnTheFly);

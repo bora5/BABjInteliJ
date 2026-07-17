@@ -87,10 +87,10 @@ final class BABjPsi {
         for (int i = start; i < segs.length; i++) {
             String seg = segs[i];
             if (cur == null) {
-                return "ne mogu da razrešim tip za '" + seg + "'";
+                return "cannot resolve the type of '" + seg + "'";
             }
             if (isMissingProperty(cur, seg)) {
-                return "'" + seg + "' nije polje entiteta " + cur.getName();
+                return "'" + seg + "' is not a property of entity " + cur.getName();
             }
             if (i < segs.length - 1) {
                 cur = propertyClass(cur, seg);

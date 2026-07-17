@@ -5,14 +5,14 @@
     <vendor url="https://bora5.co.rs">bora5</vendor>
 
     <description><![CDATA[
-        Razvojna podrška za <b>BABj</b> biblioteku (rs.co.bora5.programs.bab).<br>
+        Development support for the <b>BABj</b> library (rs.co.bora5.programs.bab).<br>
         <ul>
-          <li><b>Generator</b> — iz JPA entiteta napravi kvartet DTO / Home / View / EditWindow
-              po BABj konvencijama (Alt+Insert &rarr; <i>BABj CRUD</i>).</li>
+          <li><b>Generator</b> — creates a DTO / Home / View / EditWindow quartet from a JPA entity
+              following BABj conventions (Alt+Insert &rarr; <i>BABj CRUD</i>).</li>
           <li><b>Live templates</b> — <code>bview</code>, <code>bwin</code>, <code>bhome</code>,
               <code>bdto</code>.</li>
-          <li><b>Inspekcija</b> — upozorava kad GenericView nema prateći Edit&lt;Entity&gt;Window
-              (sa quick-fix-om koji ga generiše).</li>
+          <li><b>Inspections</b> — validate BABj view, service, DTO, and edit-window conventions,
+              with a quick fix for generating a missing Edit&lt;Entity&gt;Window.</li>
         </ul>
         ]]></description>
 
@@ -24,7 +24,7 @@
 
         <localInspection language="JAVA"
                          shortName="BABjMissingEditWindow"
-                         displayName="BABj: GenericView bez Edit prozora"
+                         displayName="BABj: GenericView without an Edit window"
                          groupName="BABj"
                          enabledByDefault="true"
                          level="WARNING"
@@ -32,7 +32,7 @@
 
         <localInspection language="JAVA"
                          shortName="BABjHomeSelect"
-                         displayName="BABj: provera polja u getSelect (uz getJoin alias-e)"
+                         displayName="BABj: validate getSelect fields and getJoin aliases"
                          groupName="BABj"
                          enabledByDefault="true"
                          level="WARNING"
@@ -40,7 +40,7 @@
 
         <localInspection language="JAVA"
                          shortName="BABjColumnNames"
-                         displayName="BABj: provera @ColumnNames (entitet + DTO servisa)"
+                         displayName="BABj: validate @ColumnNames against entity and service DTO"
                          groupName="BABj"
                          enabledByDefault="true"
                          level="WARNING"
@@ -50,8 +50,9 @@
     <actions>
         <action id="BABj.GenerateCrud"
                 class="rs.co.bora5.plugins.babj.action.GenerateBABjCrudAction"
+                icon="/icons/babjAction.svg"
                 text="BABj CRUD (DTO, Home, View, Window)"
-                description="Generiše BABj kvartet iz izabranog JPA entiteta">
+                description="Generates the BABj DTO, Home, View, and EditWindow from the selected JPA entity">
             <add-to-group group-id="GenerateGroup" anchor="last"/>
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </action>

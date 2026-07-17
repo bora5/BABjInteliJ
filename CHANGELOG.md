@@ -6,28 +6,29 @@
 
 ### Changed
 
-- Build cilja IntelliJ IDEA **Ultimate 2026.2** (build 262).
+- Standardized all user-facing plugin messages, inspection descriptions, live-template descriptions,
+  and project documentation in English.
+- Added a new BABj visual identity with light and dark plugin icons and a dedicated CRUD action icon.
+- Raised the plugin version to **1.0.4**.
+- Built against IntelliJ IDEA Community **2024.3**, with compatibility declared through build `299.*`.
 
-### Added (napredno skeniranje)
+### Added — advanced entity scanning
 
-- Display polje asocijacije se skenira sa ciljanog entiteta (`naziv` → `username` →
-  prvo `String` polje) umesto fiksnog `naziv`.
-- Operater (`K`) tip se auto-detektuje preko implementacije `OperaterEntityInterface`.
+- Association display properties are discovered on the target entity (`naziv` → `username` → the
+  first `String` field) instead of always using `naziv`.
+- The operator (`K`) type is detected through an `OperaterEntityInterface` implementation.
 
-### Added (validacija — provera polja)
+### Added — field validation
 
-- Inspekcija `BABjHomeSelect`: validira `alias.polje` reference u `getSelect()` protiv
-  polja entiteta, uz razrešavanje alias-a iz `getJoin()` (uključujući ulančane join-ove).
-- Inspekcija `BABjColumnNames`: validira `@ColumnNames` putanje protiv entiteta i ključeve
-  kolona protiv DTO-a servisa.
+- Inspection `BABjHomeSelect` validates `alias.property` references in `getSelect()` against entity
+  fields and resolves aliases from `getJoin()`, including chained joins.
+- Inspection `BABjColumnNames` validates `@ColumnNames` entity paths and service DTO keys.
 
 ### Added
 
-- **CRUD generator** (`Alt+Insert` → *BABj CRUD*): iz JPA entiteta generiše
-  `DTO`, `Home`, `View` i `EditWindow` u odgovarajućim paketima, sa mapiranjem
-  asocijacija (`@ManyToOne`/`@OneToOne` → join + combo), enum-a (`ComboBox` iz
-  `values()`) i osnovnih tipova na Vaadin polja. Konfiguracioni dijalog i
-  zaštita od gaženja postojećih fajlova.
-- **Live templates**: `bview`, `bwin`, `bhome`, `bdto`.
-- **Inspekcija** `BABjMissingEditWindow`: upozorava kad `GenericView` nema
-  prateći `Edit<Entity>Window`, sa quick-fix-om koji ga generiše.
+- **CRUD generator** (`Alt+Insert` → *BABj CRUD*) creates `DTO`, `Home`, `View`, and `EditWindow`
+  artifacts from a JPA entity, maps associations and enums to the corresponding UI controls, and
+  never overwrites existing files.
+- **Live templates**: `bview`, `bwin`, `bhome`, and `bdto`.
+- **Inspection** `BABjMissingEditWindow` reports a `GenericView` without its matching
+  `Edit<Entity>Window` and provides a generation quick fix.
