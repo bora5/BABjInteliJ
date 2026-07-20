@@ -1,141 +1,199 @@
-# BABj Support — IntelliJ plugin
+# BABj — IntelliJ IDEA Plugin
 
-Development support for the **BABj** library (`rs.co.bora5.programs.bab`). The plugin automates
-BABj conventions and reduces repetitive boilerplate.
+[![Version](https://img.shields.io/badge/version-1.5.0-blue)](gradle.properties)
+[![IntelliJ IDEA](https://img.shields.io/badge/IntelliJ%20IDEA-2024.3%2B-purple)](https://www.jetbrains.com/idea/)
+[![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
+
+IntelliJ IDEA development support for the
+[BAB library](https://github.com/bora5/BAB) (`rs.co.bora5.programs.bab`). The plugin understands
+BABj project conventions and helps developers generate, inspect, navigate, and understand BABj
+application code without repeating framework boilerplate by hand.
 
 **Author:** Borivoj Bogdanović
 
-## Features
+## Highlights
 
-### 1. CRUD quartet generator
+| Feature | What it provides |
+|---|---|
+| **Code Generator** | Generates a complete DTO, Home, View, and EditWindow quartet from a JPA entity |
+| **CRUD Designer** | Selects and reorders fields, chooses Vaadin editors, and previews the generated grid and form |
+| **Extended Generators** | Scaffolds REST endpoints, imports, reports, exports, attachments, and messaging agents |
+| **Inspections** | Detects invalid BABj property paths, joins, columns, DTO mappings, and missing EditWindows |
+| **Smart Completion** | Completes entity properties and full column definitions inside BABj annotations |
+| **BABj Navigator** | Connects related Entity, DTO, Home, View, and EditWindow classes |
+| **Lifecycle Navigator** | Visualizes the lifecycle of events implemented by a concrete BABj class |
+| **Agent Studio** | Shows static event routing, safety criteria, and actions for BABj agents |
+| **Live Templates** | Inserts individual `bview`, `bwin`, `bhome`, and `bdto` class skeletons |
 
-Starting from a JPA entity (`@Entity` or `AbstractEntity`), the generator creates four files in the
-conventional packages used by BABj projects:
+## Quick start
 
-| Artifact | Package | Contents |
+1. Open a project that uses BAB and wait for IntelliJ IDEA to finish indexing.
+2. Place the caret inside a JPA entity annotated with `@Entity` or inheriting `AbstractEntity`.
+3. Press `Alt+Insert` and select **BABj Code Generator**.
+4. Review the detected packages, operator type, roles, artifacts, and CRUD fields.
+5. Select **Generate** and inspect the created Java sources.
+
+The generator is also available from **Find Action** and the Java editor context menu. Existing
+files are preserved by default. Recreating them must be explicitly enabled and confirmed in a
+second warning dialog.
+
+## Code generation
+
+### CRUD quartet
+
+The main generator creates the four conventional BABj artifacts:
+
+| Artifact | Conventional package | Generated content |
 |---|---|---|
-| `<Entity>DTO` | `…front.views.projections` | Projection with a `(Long id, …)` constructor, getters, and setters; associations are flattened to `String` while enums retain their concrete type |
-| `<Entity>Home` | `…sesion` | `@Stateless @LocalBean @Primary` service with `getSelect()` and `getJoin()` |
-| `<Entity>View` | `…front.views` | Declarative `GenericView` with `@EnableNew/Edit/Delete`, `@AdminTypes`, `@ColumnNames`, and `@Route` |
-| `Edit<Entity>Window` | `…front.windowses` | `GenericWindow` with `@PropertyId` fields and combo-box factory calls |
+| `<Entity>DTO` | `…front.views.projections` | Projection constructor, fields, getters, and setters |
+| `<Entity>Home` | `…sesion` | BABj service with `getSelect()` and the required `getJoin()` clauses |
+| `<Entity>View` | `…front.views` | Declarative `GenericView` with roles, columns, route, and enabled actions |
+| `Edit<Entity>Window` | `…front.windowses` | `GenericWindow` with `@PropertyId` fields and matching Vaadin controls |
 
-The generator maps entity fields as follows:
+The **Artifacts** tab configures class names, packages, operator type, roles, route, and page title.
+The plugin scans the project for concrete `OperaterEntityInterface` implementations and concrete
+subclasses of `AbstractRoles`. Role discovery includes inherited and locally declared
+`public static final String` constants and supports multiple selections for `@AdminTypes`.
 
-- `@ManyToOne` / `@OneToOne` → `LEFT JOIN`, an `alias.<display>` projection, and
-  `createSimpleComboBox(...)` in the edit window. The display property is discovered on the target
-  entity, preferring String fields named `naziv`, `username`, `name`, or `oznaka`, then the first
-  remaining `String` field. Types inheriting BAB `AbstractEntity` are recognized as associations
-  even when the JPA annotation is on the getter.
-- `enum` → its concrete type in DTO and Home, plus a typed `ComboBox` populated from `values()`.
-- `LocalDate`, `LocalDateTime`, `LocalTime`, numbers, `boolean`, and `String` → matching Vaadin fields.
-- Collections (`@OneToMany` / `@ManyToMany`) are skipped.
+### Field mapping
 
-The operator (`K`) type is detected by scanning the project for concrete implementations of
-`OperaterEntityInterface` and offered as an editable choice. The dialog also discovers concrete
-subclasses of `AbstractRoles`, collects all inherited and locally declared `public static final
-String` constants, and supports selecting multiple roles for `@AdminTypes`.
+| Entity field | Generated DTO/Home representation | EditWindow control |
+|---|---|---|
+| `String` | `String` | `TextField` |
+| `boolean` / `Boolean` | same type | `Checkbox` |
+| integral and floating-point numbers | same type | matching numeric field |
+| `BigDecimal` | `BigDecimal` | `BigDecimalField` |
+| `LocalDate` | `LocalDate` | `DatePicker` |
+| `LocalDateTime` | `LocalDateTime` | `DateTimePicker` |
+| `LocalTime` | `LocalTime` | `TimePicker` |
+| enum | concrete enum type | typed `ComboBox` populated with `values()` |
+| `@ManyToOne` / `@OneToOne` | associated display value as `String` | typed BABj combo box |
+| `@OneToMany` / `@ManyToMany` | skipped | not generated |
 
-**Run it:** place the caret in an entity, press `Alt+Insert` (Generate), and select
-**BABj Code Generator**. The dialog pre-fills the base package, operator choices,
-roles registry, role choices, view class name, route, and title, and lets you choose which artifacts
-to generate. Existing files are skipped by default; an explicit recreation option requires a
-second warning confirmation before any file is replaced.
+For entity associations, the display property is selected from a target entity's String fields in
+this order: `naziv`, `username`, `name`, `oznaka`, then the first remaining String field. The Home
+projection and joins, DTO field, View column, and EditWindow binding are generated from the same
+field model.
 
-The **CRUD Designer** tab lets you include/exclude and reorder fields, override the inferred Vaadin
-editor, and preview the resulting `@ColumnNames` projection and edit form. The same field model is
-used by every generated CRUD artifact. Less frequently used generators live under
-**Additional generators**, while messaging-agent generation has its own **Agent** tab.
+The **CRUD Designer** tab can include, exclude, and reorder fields, override the inferred editor,
+and preview the resulting `@ColumnNames` declaration and edit form before files are written.
 
-### 2. Extended generators
+### Additional generators
 
-- A REST endpoint extending `AbstractEndpoint`, enabled only when the selected entity implements
-  `RestPublicIdEntityInterface`; its generated Home receives `RestPublicIdHomeInterface`.
-- CSV and Excel import-window scaffolds with BABj's upload base classes.
-- A `GenericReportWindow` scaffold with lifecycle hooks for print, e-mail, or Excel output.
-- Optional `@EnableExport` support on generated views.
-- Type-safe attachment integration for BABj database and file-system attachment parent entities.
-- A CDI messaging agent that broadcasts matching entity lifecycle events to other BABj agents.
+The **Additional generators** tab can also create:
 
-### 3. Live templates
+- a REST endpoint extending `AbstractEndpoint` for entities implementing
+  `RestPublicIdEntityInterface`;
+- CSV or Excel import-window scaffolds using BABj upload base classes;
+- a `GenericReportWindow` scaffold with report lifecycle hooks;
+- `@EnableExport` support on a generated View;
+- attachment row actions for compatible database or file-system attachment entities.
 
-`bview`, `bwin`, `bhome`, and `bdto` provide quick skeletons for individual BABj classes.
+The separate **Agent** tab generates a CDI messaging agent that converts matching entity lifecycle
+events into messages for other BABj agents.
 
-### 4. Inspections
+## Inspections and completion
 
-- **Missing Edit window** reports a `GenericView` without its conventional
-  `Edit<Entity>Window` and provides an `Alt+Enter` quick fix to generate it.
-- **`getSelect()` field validation** checks every `alias.property` token against the entity model.
-  Alias `x` is the entity; additional aliases are resolved from `getJoin()`, including chained joins.
-  Functions such as `CONCAT(...)` and literals are ignored.
-- **`@ColumnNames` validation** checks each entity property path, verifies that the optional key is
-  available from the service DTO, and accepts the optional filter/sorting boolean flags in
-  `property~key~Label~filterEnabled~sortingEnabled` entries.
-- **Annotation property validation** checks entity-property references in filters, field-visibility,
-  status, uniqueness, and `@PropertyId` bindings.
+The plugin registers a dedicated **BABj** inspection group under
+**Settings → Editor → Inspections → Java → BABj**.
 
-### 5. BABj Navigator
+- **Missing Edit window** finds a `GenericView` without the conventional
+  `Edit<Entity>Window` and provides an `Alt+Enter` quick fix.
+- **Home select validation** checks `getSelect()` property paths and resolves aliases declared in
+  `getJoin()`, including chained joins.
+- **ColumnNames validation** verifies entity paths and DTO keys. It accepts optional filter and
+  sorting flags in `property~key~Label~filterEnabled~sortingEnabled` entries.
+- **Annotation property validation** checks references used by filters, visibility, status,
+  uniqueness, SQL-field, and `@PropertyId` annotations.
 
-Recognized Entity, DTO, Home, View, and EditWindow classes have a BABj gutter icon. Clicking the
-icon lists every artifact in the same module and opens the selected class. The **BABj Navigator**
-tool window shows the complete module chain, including missing artifacts, and supports double-click
-navigation.
+Code completion inside supported BABj annotation strings suggests entity properties and one-level
+association paths. In `@ColumnNames`, it can insert a complete `property~key~Label` entry.
 
-### 6. Smart annotation completion
+## Navigation tools
 
-Code completion inside BABj annotation strings suggests valid entity properties and one-level
-association paths. `@ColumnNames` completion inserts complete `property~key~Label` definitions.
-Completion is also available for `@AddCondition`, `@AdminVisibleFields`, `@EnabledForStatus`,
-`@SqlFieldName`, `@PropertyId`, and `@SingleUniqueField` property attributes.
+### BABj Navigator
 
-### 7. BABj Agent Studio
+Related Entity, DTO, Home, View, and EditWindow classes receive a BABj gutter icon. Click it to
+open another artifact from the same module. For an overview of the entire quartet, open
+**View → Tool Windows → BABj Navigator** and double-click any discovered class. Missing artifacts
+are displayed as part of the module chain.
 
-The **BABj Agent Studio** tool window scans project implementations of `Agent`, extracts event types
-referenced by `supports(...)`, and shows statically referenced `SafetyCriterion` and `AgentAction`
-types. Select an event to see which agents can react, and double-click a node to open its source.
-This is a static simulation: it does not instantiate agents or execute application code.
+### BABj Lifecycle
 
-## Roadmap
+Open a concrete BABj service, window, or report class, then open
+**View → Tool Windows → BABj Lifecycle**. The tool shows the event flows available for that class,
+including framework steps, conditions, side effects, inherited hooks, and overridden methods.
 
-- XSD/JAXB configuration wizard for `GenericXMLUploadFileWindow`
-- specialized mail/SMS server and outbox administration wizards
-- runtime Agent Studio tracing in addition to the current static simulator
+Only events backed by a non-empty lifecycle hook are offered. Double-click a diagram node to jump
+to its implementation.
 
-See [docs/TESTING.md](docs/TESTING.md) for a complete manual test matrix.
+### BABj Agent Studio
 
-## Build and run
+Open **View → Tool Windows → BABj Agent Studio** and select **Scan project**. Agent Studio finds
+project implementations of `Agent`, groups their event, `SafetyCriterion`, and `AgentAction` types,
+and shows which agents can react to a selected event. Double-click a source-backed node to open it.
 
-```bash
-./gradlew runIde          # start a sandbox IntelliJ instance with the plugin
-./gradlew buildPlugin     # create the ZIP in build/distributions/
-./gradlew verifyPlugin    # run compatibility verification
+Agent Studio performs static analysis only: it does not instantiate agents or execute application
+code.
+
+## Installation
+
+### Build and install from disk
+
+```powershell
+.\gradlew.bat clean test buildPlugin verifyPlugin
 ```
 
-Install the ZIP from `build/distributions/` using
-*Settings → Plugins → ⚙ → Install Plugin from Disk*.
+The installable ZIP is created in `build/distributions/`. Install it using:
+
+**Settings → Plugins → ⚙ → Install Plugin from Disk**
+
+Restart IntelliJ IDEA when replacing an older version of the plugin.
+
+### Run in a development IDE
+
+```powershell
+.\gradlew.bat runIde
+```
+
+On Linux or macOS, use `./gradlew` instead of `.\gradlew.bat`.
 
 ## Requirements
 
-- Built against IntelliJ IDEA Community **2024.3** on JDK 21.
-- Compatible with IntelliJ builds **243** through **299.***, including current Ultimate versions.
-- JDK 21 for local builds.
+- IntelliJ IDEA Community or Ultimate 2024.3 or newer (build 243+)
+- JDK 21 for building the plugin
+- a project with the BAB library available as a dependency
+
+## Testing
+
+See [docs/TESTING.md](docs/TESTING.md) for the complete manual test matrix covering generation,
+inspections, completion, navigation, lifecycle diagrams, and Agent Studio.
 
 ## Project structure
 
 ```text
 src/main/java/rs/co/bora5/plugins/babj/
-├── action/        GenerateBABjCrudAction and configuration dialog
-├── agent/         Agent Studio topology browser and static simulator
+├── action/        generator action, dialog, and CRUD Designer
+├── agent/         Agent Studio topology browser and static simulation
 ├── completion/    context-aware BABj annotation completion
-├── gen/           CodeTemplates renderer and file generator
+├── gen/           source templates and file generation
 ├── inspection/    BABj inspections and quick fixes
-├── model/         entity parser, field model, naming, and generation context
-└── navigation/    related-artifact resolver, gutter links, and Navigator tool window
+├── lifecycle/     lifecycle resolution and interactive diagrams
+├── model/         entity parsing, field mapping, naming, and generation context
+└── navigation/    related-artifact resolution, gutter links, and Navigator tool window
 src/main/resources/
-├── META-INF/      plugin.xml and plugin icons
-├── icons/         action icons
+├── META-INF/      plugin metadata and Marketplace icons
+├── icons/         action and tool-window icons
 ├── inspectionDescriptions/
 └── liveTemplates/BABj.xml
 ```
+
+## Roadmap
+
+- XSD/JAXB configuration wizard for `GenericXMLUploadFileWindow`
+- specialized mail/SMS server and outbox administration wizards
+- runtime Agent Studio tracing in addition to the current static analysis
+- richer lifecycle diagrams as BAB gains new framework events
 
 ## License
 
