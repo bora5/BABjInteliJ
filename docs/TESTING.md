@@ -217,6 +217,10 @@ next to `setLabel(...)` in `createContent(...)`. Expected: the inspection offers
 `Alt+Enter → Replace with createSimpleComboBox()` and removes the refresh method and unused
 `DataProvider` import.
 
+Group several refresh calls first and their matching `setLabel(...)` calls afterwards. Expected:
+each refresh call still offers the correct fix when its ComboBox has exactly one label in the
+method. Add a second `setLabel(...)` call for the same ComboBox and confirm that no fix is offered.
+
 Repeat with `findAllLazyWithOtherEntity(...)` / `findSizeLazyWithOtherEntity(...)` and the standard
 parent listener that only calls `getLazyDataView().refreshAll()` and `setValue(null)`. Expected:
 the fix generates `createDependentComboBox(...)` and removes that redundant listener. Add any

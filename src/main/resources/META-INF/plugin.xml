@@ -39,7 +39,8 @@
               Redundant refresh methods, imports, label calls, and pure dependency listeners are
               removed automatically. Standard admin-only plus-button wrappers, including multiple
               wrappers in one block, can also be replaced with <code>comboWithAddButton(...)</code>.
-              Listeners with custom behavior are left untouched.</li>
+              Refresh calls and labels may be grouped separately. Ambiguous labels and listeners
+              with custom behavior are left untouched.</li>
           <li><b>Lifecycle image sharing</b> — the current BABj Lifecycle diagram can be copied to
               the system clipboard or exported as a full-size PNG image directly from the tool
               window.</li>
