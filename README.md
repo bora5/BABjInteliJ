@@ -1,6 +1,6 @@
 # BABj — IntelliJ IDEA Plugin
 
-[![Version](https://img.shields.io/badge/version-1.6.0-blue)](gradle.properties)
+[![Version](https://img.shields.io/badge/version-1.7.0-blue)](gradle.properties)
 [![IntelliJ IDEA](https://img.shields.io/badge/IntelliJ%20IDEA-2024.3%2B-purple)](https://www.jetbrains.com/idea/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
@@ -18,7 +18,7 @@ application code without repeating framework boilerplate by hand.
 | **Code Generator** | Generates a complete DTO, Home, View, and EditWindow quartet from a JPA entity |
 | **CRUD Designer** | Selects and reorders fields, chooses Vaadin editors, and previews the generated grid and form |
 | **Extended Generators** | Scaffolds REST endpoints, imports, reports, exports, attachments, and messaging agents |
-| **Inspections** | Detects invalid BABj property paths, joins, columns, DTO mappings, and missing EditWindows |
+| **Inspections** | Detects invalid BABj mappings and offers safe migrations to reusable BAB helper APIs |
 | **Smart Completion** | Completes entity properties and full column definitions inside BABj annotations |
 | **BABj Navigator** | Connects related Entity, DTO, Home, View, and EditWindow classes |
 | **Lifecycle Navigator** | Visualizes the lifecycle of events implemented by a concrete BABj class |
@@ -112,6 +112,11 @@ The plugin registers a dedicated **BABj** inspection group under
   calls may be grouped separately within the same method. It also recognizes one or more legacy
   admin-only `ComboBox` plus-button wrappers in the same block and replaces them with
   `comboWithAddButton(...)`, removing obsolete fields, conditionals, and imports.
+- **Common BAB simplifications** recognizes five BAB 1.7 patterns and offers focused quick fixes:
+  strict `resultOrNull(...)` / `resultOrDefault(...)` JPA results, `handleUiTask(...)` asynchronous
+  callbacks, semantic `NotificationFactory` and `ConfirmDialogs` calls, enum ComboBox factories,
+  and shared `BabDateFormats` constants. Patterns with logging, additional callbacks, ambiguous
+  labels, or other custom behavior are intentionally left unchanged.
 
 Code completion inside supported BABj annotation strings suggests entity properties and one-level
 association paths. In `@ColumnNames`, it can insert a complete `property~key~Label` entry.
