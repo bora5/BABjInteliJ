@@ -29,6 +29,12 @@
         ]]></description>
 
     <change-notes><![CDATA[
+        <h3>1.5.0</h3>
+        <ul>
+          <li><b>Precise decimal editing</b> — generated edit windows now use Vaadin
+              <code>BigDecimalField</code> for <code>BigDecimal</code> entity properties instead of
+              the double-based <code>NumberField</code>.</li>
+        </ul>
         <h3>1.4.0</h3>
         <ul>
           <li><b>Lifecycle Navigator</b> — explores event execution for concrete BAB classes as

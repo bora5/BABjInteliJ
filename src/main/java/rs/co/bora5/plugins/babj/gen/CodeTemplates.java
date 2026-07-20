@@ -545,6 +545,12 @@ public final class CodeTemplates {
                 String var = "nf" + cap;
                 yield new Component("NumberField", var, var + " = new NumberField(\"" + label + ":\");", imp);
             }
+            case BIG_DECIMAL -> {
+                imp.add("com.vaadin.flow.component.textfield.BigDecimalField");
+                String var = "bdf" + cap;
+                yield new Component("BigDecimalField", var,
+                        var + " = new BigDecimalField(\"" + label + ":\");", imp);
+            }
             case DATE -> {
                 imp.add("com.vaadin.flow.component.datepicker.DatePicker");
                 String var = "dp" + cap;
@@ -589,8 +595,9 @@ public final class CodeTemplates {
             case "boolean", "Boolean" -> BABjField.EditorKind.CHECKBOX;
             case "int", "Integer", "long", "Long", "short", "Short" ->
                     BABjField.EditorKind.INTEGER;
-            case "double", "Double", "float", "Float", "BigDecimal" ->
+            case "double", "Double", "float", "Float" ->
                     BABjField.EditorKind.NUMBER;
+            case "BigDecimal" -> BABjField.EditorKind.BIG_DECIMAL;
             case "LocalDate" -> BABjField.EditorKind.DATE;
             case "LocalDateTime" -> BABjField.EditorKind.DATE_TIME;
             case "LocalTime" -> BABjField.EditorKind.TIME;
