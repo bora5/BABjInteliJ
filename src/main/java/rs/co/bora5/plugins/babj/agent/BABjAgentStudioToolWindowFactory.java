@@ -23,6 +23,7 @@ import javax.swing.tree.TreePath;
 import org.jetbrains.annotations.NotNull;
 
 import com.intellij.ide.util.PsiNavigationSupport;
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.project.DumbAware;
@@ -64,11 +65,12 @@ public class BABjAgentStudioToolWindowFactory implements ToolWindowFactory, Dumb
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         StudioPanel panel = new StudioPanel(project);
         Content content = ContentFactory.getInstance().createContent(panel, "", false);
+        content.setDisposer(panel);
         toolWindow.getContentManager().addContent(content);
         panel.refresh();
     }
 
-    private static final class StudioPanel extends JPanel {
+    private static final class StudioPanel extends JPanel implements Disposable {
         private final Project project;
         private final JBLabel status = new JBLabel();
         private final JTree tree = new JTree(new DefaultMutableTreeNode("No agents discovered"));
@@ -117,10 +119,15 @@ public class BABjAgentStudioToolWindowFactory implements ToolWindowFactory, Dumb
             status.setText("Scanning BABj agent topology…");
             ReadAction.nonBlocking(this::scanProject)
                     .inSmartMode(project)
-                    .expireWith(project)
+                    .expireWith(this)
                     .coalesceBy(this)
                     .finishOnUiThread(ModalityState.any(), this::applyScanResult)
                     .submit(AppExecutorUtil.getAppExecutorService());
+        }
+
+        @Override
+        public void dispose() {
+            // The panel is the lifecycle parent for background scans.
         }
 
         private ScanResult scanProject() {
