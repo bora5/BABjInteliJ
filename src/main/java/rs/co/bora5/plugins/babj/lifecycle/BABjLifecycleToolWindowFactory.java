@@ -1,6 +1,8 @@
 package rs.co.bora5.plugins.babj.lifecycle;
 
 import java.awt.BorderLayout;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.List;
 
 import javax.swing.DefaultComboBoxModel;
@@ -23,12 +25,15 @@ import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
+import com.intellij.openapi.fileChooser.FileChooserFactory;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileWrapper;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.psi.PsiClass;
@@ -62,6 +67,8 @@ public final class BABjLifecycleToolWindowFactory implements ToolWindowFactory, 
         private final JBLabel status = new JBLabel("Place the caret in a BABj class.");
         private final ComboBox<LifecycleDiagram> eventCombo = new ComboBox<>();
         private final LifecycleDiagramPanel diagram = new LifecycleDiagramPanel(this::navigate);
+        private final JButton copyImage = new JButton("Copy image");
+        private final JButton exportPng = new JButton("Export PNG");
         private final Timer refreshTimer;
         private boolean applyingResult;
 
@@ -72,9 +79,13 @@ public final class BABjLifecycleToolWindowFactory implements ToolWindowFactory, 
 
             JButton refresh = new JButton("Refresh from editor");
             refresh.addActionListener(event -> refreshFromEditor());
+            copyImage.addActionListener(event -> copyDiagramImage());
+            exportPng.addActionListener(event -> exportDiagramPng());
+            updateImageActions();
             eventCombo.addActionListener(event -> {
                 if (!applyingResult) {
                     diagram.setDiagram((LifecycleDiagram) eventCombo.getSelectedItem());
+                    updateImageActions();
                 }
             });
 
@@ -82,6 +93,8 @@ public final class BABjLifecycleToolWindowFactory implements ToolWindowFactory, 
             controls.add(new JBLabel("Event:"));
             controls.add(eventCombo);
             controls.add(refresh);
+            controls.add(copyImage);
+            controls.add(exportPng);
 
             JPanel header = new JPanel(new BorderLayout(JBUI.scale(8), JBUI.scale(4)));
             header.add(status, BorderLayout.CENTER);
@@ -175,6 +188,7 @@ public final class BABjLifecycleToolWindowFactory implements ToolWindowFactory, 
                 LifecycleDiagram selected = (LifecycleDiagram) eventCombo.getSelectedItem();
                 diagram.setDiagram(selected);
                 eventCombo.setEnabled(!diagrams.isEmpty());
+                updateImageActions();
             } finally {
                 applyingResult = false;
             }
@@ -192,6 +206,58 @@ public final class BABjLifecycleToolWindowFactory implements ToolWindowFactory, 
         private LifecycleEvent selectedEvent() {
             Object item = eventCombo.getSelectedItem();
             return item instanceof LifecycleDiagram selected ? selected.event() : null;
+        }
+
+        private LifecycleDiagram selectedDiagram() {
+            Object item = eventCombo.getSelectedItem();
+            return item instanceof LifecycleDiagram selected ? selected : null;
+        }
+
+        private void updateImageActions() {
+            boolean available = diagram.hasDiagram();
+            copyImage.setEnabled(available);
+            exportPng.setEnabled(available);
+        }
+
+        private void copyDiagramImage() {
+            BufferedImage image = diagram.renderImage();
+            LifecycleDiagram selected = selectedDiagram();
+            if (image == null || selected == null) {
+                return;
+            }
+            try {
+                LifecycleDiagramImageExporter.copy(image);
+                status.setText(selected.contextName() + " — "
+                        + selected.event().getDisplayName() + " image copied to clipboard.");
+            } catch (RuntimeException exception) {
+                Messages.showErrorDialog(project,
+                        "Could not copy the lifecycle image: " + exception.getMessage(),
+                        "BABj Lifecycle");
+            }
+        }
+
+        private void exportDiagramPng() {
+            BufferedImage image = diagram.renderImage();
+            LifecycleDiagram selected = selectedDiagram();
+            if (image == null || selected == null) {
+                return;
+            }
+            VirtualFileWrapper target = FileChooserFactory.getInstance()
+                    .createSaveFileDialog(
+                            LifecycleDiagramImageExporter.fileSaverDescriptor(), project)
+                    .save(LifecycleDiagramImageExporter.suggestedFileName(selected));
+            if (target == null) {
+                return;
+            }
+            try {
+                LifecycleDiagramImageExporter.writePng(image, target.getFile());
+                status.setText("Lifecycle diagram exported to "
+                        + target.getFile().getAbsolutePath() + ".");
+            } catch (IOException exception) {
+                Messages.showErrorDialog(project,
+                        "Could not export the lifecycle image: " + exception.getMessage(),
+                        "BABj Lifecycle");
+            }
         }
 
         private void navigate(LifecycleDiagram.Node node) {

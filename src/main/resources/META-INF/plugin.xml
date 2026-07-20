@@ -16,7 +16,8 @@
           <li><b>Navigator</b> — gutter links and a visual tool window connect each Entity, DTO,
               Home, View, and EditWindow module.</li>
           <li><b>Lifecycle Navigator</b> — diagrams BAB event execution, branches, inherited hooks,
-              concrete overrides, and framework side effects with direct code navigation.</li>
+              concrete overrides, and framework side effects with direct code navigation and PNG
+              export.</li>
           <li><b>Smart completion</b> — suggests valid entity properties and complete column
               definitions inside BABj annotations.</li>
           <li><b>CRUD Designer</b> — selects and orders fields, chooses edit controls, and previews
@@ -37,6 +38,9 @@
               <code>createSimpleComboBox(...)</code> or <code>createDependentComboBox(...)</code>.
               Redundant refresh methods, imports, label calls, and pure dependency listeners are
               removed automatically, while listeners with custom behavior are left untouched.</li>
+          <li><b>Lifecycle image sharing</b> — the current BABj Lifecycle diagram can be copied to
+              the system clipboard or exported as a full-size PNG image directly from the tool
+              window.</li>
         </ul>
         <h3>1.5.0</h3>
         <ul>

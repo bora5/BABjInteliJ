@@ -244,7 +244,18 @@ Expected: the module graph shows found and missing artifacts, navigation opens s
 generator remains available in all supported action contexts while a Java editor is active.
 Repeated refreshes must complete without EDT/read-action exceptions or blocking the IDE UI.
 
-## 15. Release verification
+## 15. Lifecycle image copy and export
+
+1. Open a concrete BABj class with a non-empty supported lifecycle hook.
+2. Open **View → Tool Windows → BABj Lifecycle** and select an event.
+3. Click **Copy image** and paste into an image editor, document, or chat application.
+4. Click **Export PNG**, choose a location, and open the saved file.
+
+Expected: both outputs contain the complete diagram at its natural size, even when the tool window
+shows scrollbars. The buttons are disabled when no lifecycle is available. The suggested filename
+contains the class and event names and ends in `.png`.
+
+## 16. Release verification
 
 Before publishing a plugin build, run:
 

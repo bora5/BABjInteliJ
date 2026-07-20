@@ -14,12 +14,14 @@ import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Path2D;
+import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
 import javax.swing.JComponent;
 import javax.swing.ToolTipManager;
+import javax.swing.UIManager;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -83,25 +85,51 @@ final class LifecycleDiagramPanel extends JComponent {
         repaint();
     }
 
+    boolean hasDiagram() {
+        return diagram != null;
+    }
+
+    @Nullable BufferedImage renderImage() {
+        if (diagram == null) {
+            return null;
+        }
+        Dimension size = preferredDiagramSize();
+        BufferedImage image = new BufferedImage(size.width, size.height,
+                BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = image.createGraphics();
+        try {
+            paintDiagram(graphics, size.width, size.height);
+        } finally {
+            graphics.dispose();
+        }
+        return image;
+    }
+
     @Override
     protected void paintComponent(Graphics graphics) {
         super.paintComponent(graphics);
         Graphics2D g = (Graphics2D) graphics.create();
         try {
-            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g.setColor(UIUtil.getPanelBackground());
-            g.fillRect(0, 0, getWidth(), getHeight());
-            if (diagram == null) {
-                drawEmpty(g);
-                return;
-            }
-            calculateBounds();
-            drawEdges(g);
-            for (LifecycleDiagram.Node node : diagram.nodes()) {
-                drawNode(g, node, bounds.get(node.id()));
-            }
+            paintDiagram(g, getWidth(), getHeight());
         } finally {
             g.dispose();
+        }
+    }
+
+    private void paintDiagram(Graphics2D g, int width, int height) {
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g.setColor(UIUtil.getPanelBackground());
+        g.fillRect(0, 0, width, height);
+        if (diagram == null) {
+            drawEmpty(g, width, height);
+            return;
+        }
+        calculateBounds();
+        drawEdges(g);
+        for (LifecycleDiagram.Node node : diagram.nodes()) {
+            drawNode(g, node, bounds.get(node.id()));
         }
     }
 
@@ -164,7 +192,8 @@ final class LifecycleDiagramPanel extends JComponent {
                         : (startX + endX) / 2;
                 int labelY = startY + Math.max(JBUI.scale(15), (endY - startY) / 2)
                         - JBUI.scale(3);
-                g.setFont(getFont().deriveFont(Font.BOLD, getFont().getSize2D() - 1));
+                Font base = baseFont();
+                g.setFont(base.deriveFont(Font.BOLD, base.getSize2D() - 1));
                 g.drawString(edge.label(), labelX, labelY);
             }
         }
@@ -198,7 +227,7 @@ final class LifecycleDiagramPanel extends JComponent {
         }
 
         g.setColor(UIUtil.getLabelForeground());
-        Font base = getFont();
+        Font base = baseFont();
         g.setFont(base.deriveFont(Font.BOLD));
         drawCentered(g, node.label(), box, box.y + JBUI.scale(27), JBUI.scale(20));
         g.setFont(base.deriveFont(Math.max(10f, base.getSize2D() - 1f)));
@@ -245,12 +274,20 @@ final class LifecycleDiagramPanel extends JComponent {
         };
     }
 
-    private void drawEmpty(Graphics2D g) {
+    private void drawEmpty(Graphics2D g, int width, int height) {
         String text = "Place the caret in a BABj class and refresh.";
         g.setColor(UIUtil.getLabelDisabledForeground());
         FontMetrics metrics = g.getFontMetrics();
-        g.drawString(text, Math.max(MARGIN, (getWidth() - metrics.stringWidth(text)) / 2),
-                Math.max(MARGIN, getHeight() / 2));
+        g.drawString(text, Math.max(MARGIN, (width - metrics.stringWidth(text)) / 2),
+                Math.max(MARGIN, height / 2));
+    }
+
+    private Font baseFont() {
+        Font font = getFont();
+        if (font == null) {
+            font = UIManager.getFont("Label.font");
+        }
+        return font != null ? font : new Font(Font.SANS_SERIF, Font.PLAIN, 12);
     }
 
     private @Nullable LifecycleDiagram.Node nodeAt(Point point) {

@@ -129,7 +129,9 @@ Open a concrete BABj service, window, or report class, then open
 including framework steps, conditions, side effects, inherited hooks, and overridden methods.
 
 Only events backed by a non-empty lifecycle hook are offered. Double-click a diagram node to jump
-to its implementation.
+to its implementation. Use **Copy image** to place the complete diagram on the clipboard or
+**Export PNG** to save it as a full-size image, including portions outside the current scroll
+viewport.
 
 ### BABj Agent Studio
 
