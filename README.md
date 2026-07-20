@@ -1,6 +1,6 @@
 # BABj — IntelliJ IDEA Plugin
 
-[![Version](https://img.shields.io/badge/version-1.5.0-blue)](gradle.properties)
+[![Version](https://img.shields.io/badge/version-1.6.0-blue)](gradle.properties)
 [![IntelliJ IDEA](https://img.shields.io/badge/IntelliJ%20IDEA-2024.3%2B-purple)](https://www.jetbrains.com/idea/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
@@ -105,6 +105,10 @@ The plugin registers a dedicated **BABj** inspection group under
   sorting flags in `property~key~Label~filterEnabled~sortingEnabled` entries.
 - **Annotation property validation** checks references used by filters, visibility, status,
   uniqueness, SQL-field, and `@PropertyId` annotations.
+- **Legacy ComboBox simplification** recognizes hand-written lazy `DataProvider` refresh methods
+  and provides an `Alt+Enter` quick fix that replaces them with `createSimpleComboBox(...)` or
+  `createDependentComboBox(...)`. The dependent conversion removes a redundant refresh listener
+  only when it contains no additional business logic.
 
 Code completion inside supported BABj annotation strings suggests entity properties and one-level
 association paths. In `@ColumnNames`, it can insert a complete `property~key~Label` entry.

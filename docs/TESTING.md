@@ -12,7 +12,7 @@ Build the plugin:
 .\gradlew.bat buildPlugin
 ```
 
-Install `build/distributions/BABjInteliJ-1.4.0.zip` through:
+Install `build/distributions/BABjInteliJ-1.6.0.zip` through:
 
 `Settings → Plugins → ⚙ → Install Plugin from Disk`
 
@@ -208,6 +208,20 @@ other than `true` or `false`; the inspection should report the invalid boolean.
 In `getSelect()`, reference an unknown alias or an invalid joined property. In `getJoin()`, add a
 valid chained join and use it from `getSelect()`. Expected: invalid references are reported while
 valid chained aliases are accepted.
+
+### Legacy ComboBox simplification
+
+Create a private refresh method that initializes a `ComboBox` with
+`DataProvider.fromFilteringCallbacks(...)`, `findAllLazy(...)`, and `findSizeLazy(...)`. Call it
+next to `setLabel(...)` in `createContent(...)`. Expected: the inspection offers
+`Alt+Enter → Replace with createSimpleComboBox()` and removes the refresh method and unused
+`DataProvider` import.
+
+Repeat with `findAllLazyWithOtherEntity(...)` / `findSizeLazyWithOtherEntity(...)` and the standard
+parent listener that only calls `getLazyDataView().refreshAll()` and `setValue(null)`. Expected:
+the fix generates `createDependentComboBox(...)` and removes that redundant listener. Add any
+third statement to the listener and confirm that no automatic fix is offered, preserving custom
+business behavior.
 
 ## 13. Live templates
 

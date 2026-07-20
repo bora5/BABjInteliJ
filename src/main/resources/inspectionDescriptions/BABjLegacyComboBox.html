@@ -1,0 +1,14 @@
+<html>
+<body>
+Reports legacy BABj ComboBox setup methods that manually create a lazy
+<code>DataProvider.fromFilteringCallbacks(...)</code> provider.
+
+<p>The quick fix replaces the refresh method and separate label call with
+<code>createSimpleComboBox(...)</code> or <code>createDependentComboBox(...)</code>. For dependent
+ComboBoxes it also removes a listener when the listener only refreshes the child data view and
+clears its selection, because the BAB factory already provides that behavior.</p>
+
+<p>The inspection intentionally ignores unsupported provider variants, refresh methods with other
+statements, methods with multiple call sites, and dependency listeners containing custom behavior.</p>
+</body>
+</html>

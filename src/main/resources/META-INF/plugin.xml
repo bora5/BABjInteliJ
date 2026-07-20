@@ -29,6 +29,15 @@
         ]]></description>
 
     <change-notes><![CDATA[
+        <h3>1.6.0</h3>
+        <ul>
+          <li><b>ComboBox simplification</b> — a new inspection recognizes legacy lazy
+              <code>DataProvider.fromFilteringCallbacks(...)</code> refresh methods and offers an
+              <code>Alt+Enter</code> quick fix to replace them with
+              <code>createSimpleComboBox(...)</code> or <code>createDependentComboBox(...)</code>.
+              Redundant refresh methods, imports, label calls, and pure dependency listeners are
+              removed automatically, while listeners with custom behavior are left untouched.</li>
+        </ul>
         <h3>1.5.0</h3>
         <ul>
           <li><b>Precise decimal editing</b> — generated edit windows now use Vaadin
@@ -109,6 +118,14 @@
                          enabledByDefault="true"
                          level="WARNING"
                          implementationClass="rs.co.bora5.plugins.babj.inspection.AnnotationPropertyInspection"/>
+
+        <localInspection language="JAVA"
+                         shortName="BABjLegacyComboBox"
+                         displayName="BABj: legacy ComboBox setup can use a factory method"
+                         groupName="BABj"
+                         enabledByDefault="true"
+                         level="WEAK WARNING"
+                         implementationClass="rs.co.bora5.plugins.babj.inspection.LegacyComboBoxInspection"/>
     </extensions>
 
     <actions>
