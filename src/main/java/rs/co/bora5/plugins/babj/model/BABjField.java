@@ -34,6 +34,7 @@ public record BABjField(String name, Kind kind, String typeSimpleName, String ty
         TEXT("Text field"),
         INTEGER("Integer field"),
         NUMBER("Number field"),
+        BIG_DECIMAL("BigDecimal field"),
         CHECKBOX("Checkbox"),
         DATE("Date picker"),
         DATE_TIME("Date/time picker"),

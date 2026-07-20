@@ -1,5 +1,6 @@
 package rs.co.bora5.plugins.babj.gen;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -81,6 +82,28 @@ public class CodeTemplatesTest {
                 "createSimpleComboBox(\"Customer:\", customerEJB, \"username\")"));
         assertTrue(window.contains("ComboBox<OrderStatus> cbStatus"));
         assertTrue(window.contains("cbStatus.setItems(OrderStatus.values());"));
+    }
+
+    @Test
+    public void generatesBigDecimalFieldForBigDecimalProperties() {
+        BABjField amount = new BABjField("amount", BABjField.Kind.SIMPLE, "BigDecimal",
+                "java.math.BigDecimal", null);
+        GenerationContext context = context(false, false,
+                EntityModel.AttachmentSupport.none(), false, List.of(amount));
+
+        String dto = CodeTemplates.dto(context);
+        String window = CodeTemplates.window(context);
+
+        assertTrue(dto.contains("import java.math.BigDecimal;"));
+        assertTrue(dto.contains("private BigDecimal amount;"));
+        assertTrue(window.contains(
+                "import com.vaadin.flow.component.textfield.BigDecimalField;"));
+        assertTrue(window.contains("private BigDecimalField bdfAmount;"));
+        assertTrue(window.contains(
+                "bdfAmount = new BigDecimalField(\"Amount:\");"));
+        assertTrue(window.contains("vl.add(bdfAmount);"));
+        assertFalse(window.contains("NumberField nfAmount"));
+        assertEquals("BigDecimal field", CodeTemplates.editorName(amount));
     }
 
     private static GenerationContext context(boolean csv, boolean attachments,
