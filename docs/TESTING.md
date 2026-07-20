@@ -223,6 +223,14 @@ the fix generates `createDependentComboBox(...)` and removes that redundant list
 third statement to the listener and confirm that no automatic fix is offered, preserving custom
 business behavior.
 
+Create the legacy admin-only add-button pattern with `Button`, `HorizontalLayout`, the standard
+plus icon, and a two-step `editWindow.init(...); editWindow.open();` click listener. Add both the
+wrapper and plain ComboBox through a later `if (getAdmin()) ... else ...` block. Expected:
+`Alt+Enter → Replace admin ComboBox wrappers with comboWithAddButton()` creates a local wrapper,
+chains the `init(...).open()` callback, removes the conditionals, obsolete fields, and unused
+imports. Repeat with two or more wrappers inside the same admin block; all are converted together.
+Add custom click-listener behavior and confirm that the fix is not offered.
+
 ## 13. Live templates
 
 In a Java class, type each abbreviation and press `Tab`:

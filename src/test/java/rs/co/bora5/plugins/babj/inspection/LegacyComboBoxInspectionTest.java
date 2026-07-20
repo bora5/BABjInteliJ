@@ -171,6 +171,138 @@ public class LegacyComboBoxInspectionTest extends LightJavaCodeInsightFixtureTes
         assertNoQuickFix("Replace with createDependentComboBox()");
     }
 
+    public void testReplacesMultipleAdminAddButtonWrappers() {
+        myFixture.configureByText("EditGradWindow.java", """
+                package example;
+
+                import org.vaadin.lineawesome.LineAwesomeIcon;
+                import com.vaadin.flow.component.button.Button;
+                import com.vaadin.flow.component.combobox.ComboBox;
+                import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+                import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+                import rs.co.bora5.programs.bab.front.windowses.GenericWindow;
+
+                class Filijala {}
+                class Region {}
+                class EditEntityWindow {
+                    EditEntityWindow init(boolean creating, Object bean, Object source) { return this; }
+                    void open() {}
+                }
+
+                class EditGradWindow extends GenericWindow {
+                    ComboBox<Filijala> cbFilijala;
+                    ComboBox<Region> cbRegion;
+                    HorizontalLayout wrapFilijala;
+                    HorizontalLayout wrapRegion;
+                    Button btnAddFilijala;
+                    Button btnAddRegion;
+                    EditEntityWindow editFilijalaWindow;
+                    EditEntityWindow editRegionWindow;
+
+                    void createContent(VerticalLayout vl) {
+                        cbFilijala = createSimpleComboBox("Filijala:", new Object(), "naziv");
+                        cbRegion = createSimpleComboBox("Region:", new Object(), "naziv");
+
+                        <caret>if (getAdmin()) {
+                            btnAddFilijala = new Button();
+                            wrapFilijala = new HorizontalLayout();
+                            wrapFilijala.setSpacing(true);
+                            wrapFilijala.add(cbFilijala);
+                            wrapFilijala.add(btnAddFilijala);
+                            btnAddFilijala.setIcon(LineAwesomeIcon.PLUS_CIRCLE_SOLID.create());
+                            btnAddFilijala.addClickListener(event -> {
+                                editFilijalaWindow.init(true, null, EditGradWindow.this);
+                                editFilijalaWindow.open();
+                            });
+
+                            btnAddRegion = new Button();
+                            wrapRegion = new HorizontalLayout();
+                            wrapRegion.setSpacing(true);
+                            wrapRegion.add(cbRegion, btnAddRegion);
+                            btnAddRegion.setIcon(LineAwesomeIcon.PLUS_CIRCLE_SOLID.create());
+                            btnAddRegion.addClickListener(event -> {
+                                editRegionWindow.init(true, null, EditGradWindow.this);
+                                editRegionWindow.open();
+                            });
+                        }
+
+                        if (getAdmin()) {
+                            vl.add(wrapFilijala);
+                            vl.add(wrapRegion);
+                        } else {
+                            vl.add(cbFilijala);
+                            vl.add(cbRegion);
+                        }
+                    }
+                }
+                """);
+
+        launch("Replace admin ComboBox wrappers with comboWithAddButton()");
+
+        String result = myFixture.getFile().getText();
+        assertTrue(result.contains("HorizontalLayout wrapFilijala = comboWithAddButton("
+                + "cbFilijala, event -> editFilijalaWindow.init(true, null, "
+                + "EditGradWindow.this).open());"));
+        assertTrue(result.contains("HorizontalLayout wrapRegion = comboWithAddButton("
+                + "cbRegion, event -> editRegionWindow.init(true, null, "
+                + "EditGradWindow.this).open());"));
+        assertTrue(result.contains("vl.add(wrapFilijala);"));
+        assertTrue(result.contains("vl.add(wrapRegion);"));
+        assertFalse(result.contains("if (getAdmin())"));
+        assertFalse(result.contains("Button btnAdd"));
+        assertFalse(result.contains("LineAwesomeIcon"));
+    }
+
+    public void testDoesNotReplaceAdminWrapperWithCustomClickBehavior() {
+        myFixture.configureByText("EditGradWindow.java", """
+                package example;
+
+                import org.vaadin.lineawesome.LineAwesomeIcon;
+                import com.vaadin.flow.component.button.Button;
+                import com.vaadin.flow.component.combobox.ComboBox;
+                import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+                import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+                import rs.co.bora5.programs.bab.front.windowses.GenericWindow;
+
+                class Filijala {}
+                class EditEntityWindow {
+                    EditEntityWindow init(boolean creating, Object bean, Object source) { return this; }
+                    void open() {}
+                }
+
+                class EditGradWindow extends GenericWindow {
+                    ComboBox<Filijala> cbFilijala;
+                    HorizontalLayout wrapFilijala;
+                    Button btnAddFilijala;
+                    EditEntityWindow editFilijalaWindow;
+
+                    void createContent(VerticalLayout vl) {
+                        <caret>if (getAdmin()) {
+                            btnAddFilijala = new Button();
+                            wrapFilijala = new HorizontalLayout();
+                            wrapFilijala.setSpacing(true);
+                            wrapFilijala.add(cbFilijala, btnAddFilijala);
+                            btnAddFilijala.setIcon(LineAwesomeIcon.PLUS_CIRCLE_SOLID.create());
+                            btnAddFilijala.addClickListener(event -> {
+                                editFilijalaWindow.init(true, null, this);
+                                editFilijalaWindow.open();
+                                logCreation();
+                            });
+                        }
+                        if (getAdmin()) {
+                            vl.add(wrapFilijala);
+                        } else {
+                            vl.add(cbFilijala);
+                        }
+                    }
+
+                    void logCreation() {}
+                }
+                """);
+
+        assertNoQuickFix("Replace admin ComboBox wrappers with comboWithAddButton()");
+    }
+
     public void testDoesNotReplaceUnsupportedFlagProvider() {
         myFixture.configureByText("EditCompanyWindow.java", """
                 package example;
@@ -268,9 +400,44 @@ public class LegacyComboBoxInspectionTest extends LightJavaCodeInsightFixtureTes
                 }
                 """);
         myFixture.addClass("""
+                package com.vaadin.flow.component.button;
+
+                public class Button {
+                    public Button() {}
+                    public Button(Object icon) {}
+                    public void setIcon(Object icon) {}
+                    public void addClickListener(java.util.function.Consumer<Object> listener) {}
+                }
+                """);
+        myFixture.addClass("""
+                package com.vaadin.flow.component.orderedlayout;
+
+                public class HorizontalLayout {
+                    public HorizontalLayout(Object... children) {}
+                    public void setSpacing(boolean spacing) {}
+                    public void add(Object... children) {}
+                }
+                """);
+        myFixture.addClass("""
+                package com.vaadin.flow.component.orderedlayout;
+
+                public class VerticalLayout {
+                    public void add(Object... children) {}
+                }
+                """);
+        myFixture.addClass("""
+                package org.vaadin.lineawesome;
+
+                public enum LineAwesomeIcon {
+                    PLUS_CIRCLE_SOLID;
+                    public Object create() { return null; }
+                }
+                """);
+        myFixture.addClass("""
                 package rs.co.bora5.programs.bab.front.windowses;
 
                 import com.vaadin.flow.component.combobox.ComboBox;
+                import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 
                 public class GenericWindow {
                     protected <A, H> ComboBox<A> createSimpleComboBox(
@@ -278,6 +445,11 @@ public class LegacyComboBoxInspectionTest extends LightJavaCodeInsightFixtureTes
                     protected <P, A, H> ComboBox<A> createDependentComboBox(
                             String caption, H service, String dependsOn,
                             ComboBox<P> parent, String... searchFields) { return null; }
+                    protected boolean getAdmin() { return false; }
+                    protected <A> HorizontalLayout comboWithAddButton(
+                            ComboBox<A> combo, java.util.function.Consumer<Object> listener) {
+                        return null;
+                    }
                 }
                 """);
     }

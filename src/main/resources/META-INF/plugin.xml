@@ -37,7 +37,9 @@
               <code>Alt+Enter</code> quick fix to replace them with
               <code>createSimpleComboBox(...)</code> or <code>createDependentComboBox(...)</code>.
               Redundant refresh methods, imports, label calls, and pure dependency listeners are
-              removed automatically, while listeners with custom behavior are left untouched.</li>
+              removed automatically. Standard admin-only plus-button wrappers, including multiple
+              wrappers in one block, can also be replaced with <code>comboWithAddButton(...)</code>.
+              Listeners with custom behavior are left untouched.</li>
           <li><b>Lifecycle image sharing</b> — the current BABj Lifecycle diagram can be copied to
               the system clipboard or exported as a full-size PNG image directly from the tool
               window.</li>
@@ -125,7 +127,7 @@
 
         <localInspection language="JAVA"
                          shortName="BABjLegacyComboBox"
-                         displayName="BABj: legacy ComboBox setup can use a factory method"
+                         displayName="BABj: legacy ComboBox setup can use BABj helpers"
                          groupName="BABj"
                          enabledByDefault="true"
                          level="WEAK WARNING"

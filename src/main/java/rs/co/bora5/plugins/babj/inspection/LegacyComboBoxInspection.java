@@ -1,5 +1,8 @@
 package rs.co.bora5.plugins.babj.inspection;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,21 +20,32 @@ public class LegacyComboBoxInspection extends AbstractBaseJavaLocalInspectionToo
     public ProblemDescriptor @Nullable [] checkMethod(@NotNull PsiMethod method,
                                                        @NotNull InspectionManager manager,
                                                        boolean isOnTheFly) {
+        List<ProblemDescriptor> descriptors = new ArrayList<>();
         LegacyComboBoxPattern.Match match = LegacyComboBoxPattern.detect(method);
-        if (match == null) {
-            return null;
+        if (match != null) {
+            PsiElement anchor = match.invocation().getMethodExpression().getReferenceNameElement();
+            if (anchor != null) {
+                String factory = match.kind().factoryMethod();
+                descriptors.add(manager.createProblemDescriptor(
+                        anchor,
+                        "Legacy ComboBox setup can be replaced with " + factory + "().",
+                        new SimplifyLegacyComboBoxQuickFix(match.kind()),
+                        ProblemHighlightType.WEAK_WARNING,
+                        isOnTheFly));
+            }
         }
-        PsiElement anchor = match.invocation().getMethodExpression().getReferenceNameElement();
-        if (anchor == null) {
-            return null;
+
+        LegacyAdminComboBoxPattern.Match adminMatch = LegacyAdminComboBoxPattern.detect(method);
+        if (adminMatch != null) {
+            PsiElement anchor = adminMatch.setupIf().getFirstChild();
+            descriptors.add(manager.createProblemDescriptor(
+                    anchor,
+                    "Admin-only ComboBox add buttons can be replaced with "
+                            + "comboWithAddButton().",
+                    new SimplifyLegacyAdminComboBoxQuickFix(),
+                    ProblemHighlightType.WEAK_WARNING,
+                    isOnTheFly));
         }
-        String factory = match.kind().factoryMethod();
-        ProblemDescriptor descriptor = manager.createProblemDescriptor(
-                anchor,
-                "Legacy ComboBox setup can be replaced with " + factory + "().",
-                new SimplifyLegacyComboBoxQuickFix(match.kind()),
-                ProblemHighlightType.WEAK_WARNING,
-                isOnTheFly);
-        return new ProblemDescriptor[]{descriptor};
+        return descriptors.isEmpty() ? null : descriptors.toArray(ProblemDescriptor[]::new);
     }
 }
