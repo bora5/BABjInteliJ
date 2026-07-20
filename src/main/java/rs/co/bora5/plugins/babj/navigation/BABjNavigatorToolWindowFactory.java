@@ -19,6 +19,7 @@ import javax.swing.tree.TreePath;
 import com.intellij.ui.treeStructure.Tree;
 import org.jetbrains.annotations.NotNull;
 
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -55,11 +56,12 @@ public class BABjNavigatorToolWindowFactory implements ToolWindowFactory, DumbAw
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         NavigatorPanel panel = new NavigatorPanel(project);
         Content content = ContentFactory.getInstance().createContent(panel, "", false);
+        content.setDisposer(panel);
         toolWindow.getContentManager().addContent(content);
         panel.refreshFromEditor();
     }
 
-    private static final class NavigatorPanel extends JPanel {
+    private static final class NavigatorPanel extends JPanel implements Disposable {
 
         private final Project project;
         private final JBLabel status = new JBLabel("Place the caret in a BABj class.");
@@ -107,10 +109,15 @@ public class BABjNavigatorToolWindowFactory implements ToolWindowFactory, DumbAw
             status.setText("Scanning BABj module…");
             ReadAction.nonBlocking(() -> scanEditor(snapshot))
                     .inSmartMode(project)
-                    .expireWith(project)
+                    .expireWith(this)
                     .coalesceBy(this)
                     .finishOnUiThread(ModalityState.any(), this::applyScanResult)
                     .submit(AppExecutorUtil.getAppExecutorService());
+        }
+
+        @Override
+        public void dispose() {
+            // The panel is the lifecycle parent for background scans.
         }
 
         private NavigatorScanResult scanEditor(EditorSnapshot snapshot) {
