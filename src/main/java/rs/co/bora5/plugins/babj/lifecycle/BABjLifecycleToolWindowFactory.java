@@ -123,10 +123,14 @@ public final class BABjLifecycleToolWindowFactory implements ToolWindowFactory, 
                 applyScanResult(BABjLifecycleResolver.ScanResult.none());
                 return;
             }
-            PsiDocumentManager.getInstance(project).commitDocument(editor.getDocument());
             EditorSnapshot snapshot = new EditorSnapshot(
                     editor.getDocument(), editor.getCaretModel().getOffset());
             status.setText("Resolving BAB lifecycle…");
+            PsiDocumentManager.getInstance(project).performForCommittedDocument(
+                    snapshot.document(), () -> submitScan(snapshot));
+        }
+
+        private void submitScan(EditorSnapshot snapshot) {
             ReadAction.nonBlocking(() -> scanEditor(snapshot))
                     .inSmartMode(project)
                     .expireWith(this)
