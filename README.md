@@ -136,3 +136,9 @@ src/main/resources/
 ├── inspectionDescriptions/
 └── liveTemplates/BABj.xml
 ```
+
+## License
+
+Copyright 2026 Borivoj Bogdanović.
+
+Licensed under the [Apache License 2.0](LICENSE).
