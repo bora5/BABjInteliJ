@@ -20,6 +20,7 @@ import com.intellij.ui.treeStructure.Tree;
 import org.jetbrains.annotations.NotNull;
 
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -28,6 +29,7 @@ import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
@@ -186,15 +188,16 @@ public class BABjNavigatorToolWindowFactory implements ToolWindowFactory, DumbAw
                     || !(node.getUserObject() instanceof ArtifactNode artifactNode)) {
                 return;
             }
-            NavigationTarget navigation = ReadAction.compute(() -> {
-                PsiClass target = artifactNode.target();
-                if (target == null || !target.isValid() || target.getContainingFile() == null
-                        || target.getContainingFile().getVirtualFile() == null) {
-                    return null;
-                }
-                return new NavigationTarget(target.getContainingFile().getVirtualFile(),
-                        target.getTextOffset());
-            });
+            NavigationTarget navigation = ApplicationManager.getApplication().runReadAction(
+                    (Computable<NavigationTarget>) () -> {
+                        PsiClass target = artifactNode.target();
+                        if (target == null || !target.isValid() || target.getContainingFile() == null
+                                || target.getContainingFile().getVirtualFile() == null) {
+                            return null;
+                        }
+                        return new NavigationTarget(target.getContainingFile().getVirtualFile(),
+                                target.getTextOffset());
+                    });
             if (navigation != null) {
                 PsiNavigationSupport.getInstance().createNavigatable(
                         project, navigation.file(), navigation.offset())
