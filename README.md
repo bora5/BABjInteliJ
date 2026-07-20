@@ -108,7 +108,9 @@ The plugin registers a dedicated **BABj** inspection group under
 - **Legacy ComboBox simplification** recognizes hand-written lazy `DataProvider` refresh methods
   and provides an `Alt+Enter` quick fix that replaces them with `createSimpleComboBox(...)` or
   `createDependentComboBox(...)`. The dependent conversion removes a redundant refresh listener
-  only when it contains no additional business logic.
+  only when it contains no additional business logic. It also recognizes one or more legacy
+  admin-only `ComboBox` plus-button wrappers in the same block and replaces them with
+  `comboWithAddButton(...)`, removing obsolete fields, conditionals, and imports.
 
 Code completion inside supported BABj annotation strings suggests entity properties and one-level
 association paths. In `@ColumnNames`, it can insert a complete `property~key~Label` entry.
