@@ -1,6 +1,6 @@
 # BABj — IntelliJ IDEA Plugin
 
-[![Version](https://img.shields.io/badge/version-1.5.0-blue)](gradle.properties)
+[![Version](https://img.shields.io/badge/version-1.6.0-blue)](gradle.properties)
 [![IntelliJ IDEA](https://img.shields.io/badge/IntelliJ%20IDEA-2024.3%2B-purple)](https://www.jetbrains.com/idea/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
@@ -105,6 +105,10 @@ The plugin registers a dedicated **BABj** inspection group under
   sorting flags in `property~key~Label~filterEnabled~sortingEnabled` entries.
 - **Annotation property validation** checks references used by filters, visibility, status,
   uniqueness, SQL-field, and `@PropertyId` annotations.
+- **Legacy ComboBox simplification** recognizes hand-written lazy `DataProvider` refresh methods
+  and provides an `Alt+Enter` quick fix that replaces them with `createSimpleComboBox(...)` or
+  `createDependentComboBox(...)`. The dependent conversion removes a redundant refresh listener
+  only when it contains no additional business logic.
 
 Code completion inside supported BABj annotation strings suggests entity properties and one-level
 association paths. In `@ColumnNames`, it can insert a complete `property~key~Label` entry.
@@ -125,7 +129,9 @@ Open a concrete BABj service, window, or report class, then open
 including framework steps, conditions, side effects, inherited hooks, and overridden methods.
 
 Only events backed by a non-empty lifecycle hook are offered. Double-click a diagram node to jump
-to its implementation.
+to its implementation. Use **Copy image** to place the complete diagram on the clipboard or
+**Export PNG** to save it as a full-size image, including portions outside the current scroll
+viewport.
 
 ### BABj Agent Studio
 

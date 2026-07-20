@@ -12,7 +12,7 @@ Build the plugin:
 .\gradlew.bat buildPlugin
 ```
 
-Install `build/distributions/BABjInteliJ-1.4.0.zip` through:
+Install `build/distributions/BABjInteliJ-1.6.0.zip` through:
 
 `Settings → Plugins → ⚙ → Install Plugin from Disk`
 
@@ -209,6 +209,20 @@ In `getSelect()`, reference an unknown alias or an invalid joined property. In `
 valid chained join and use it from `getSelect()`. Expected: invalid references are reported while
 valid chained aliases are accepted.
 
+### Legacy ComboBox simplification
+
+Create a private refresh method that initializes a `ComboBox` with
+`DataProvider.fromFilteringCallbacks(...)`, `findAllLazy(...)`, and `findSizeLazy(...)`. Call it
+next to `setLabel(...)` in `createContent(...)`. Expected: the inspection offers
+`Alt+Enter → Replace with createSimpleComboBox()` and removes the refresh method and unused
+`DataProvider` import.
+
+Repeat with `findAllLazyWithOtherEntity(...)` / `findSizeLazyWithOtherEntity(...)` and the standard
+parent listener that only calls `getLazyDataView().refreshAll()` and `setValue(null)`. Expected:
+the fix generates `createDependentComboBox(...)` and removes that redundant listener. Add any
+third statement to the listener and confirm that no automatic fix is offered, preserving custom
+business behavior.
+
 ## 13. Live templates
 
 In a Java class, type each abbreviation and press `Tab`:
@@ -230,7 +244,18 @@ Expected: the module graph shows found and missing artifacts, navigation opens s
 generator remains available in all supported action contexts while a Java editor is active.
 Repeated refreshes must complete without EDT/read-action exceptions or blocking the IDE UI.
 
-## 15. Release verification
+## 15. Lifecycle image copy and export
+
+1. Open a concrete BABj class with a non-empty supported lifecycle hook.
+2. Open **View → Tool Windows → BABj Lifecycle** and select an event.
+3. Click **Copy image** and paste into an image editor, document, or chat application.
+4. Click **Export PNG**, choose a location, and open the saved file.
+
+Expected: both outputs contain the complete diagram at its natural size, even when the tool window
+shows scrollbars. The buttons are disabled when no lifecycle is available. The suggested filename
+contains the class and event names and ends in `.png`.
+
+## 16. Release verification
 
 Before publishing a plugin build, run:
 
