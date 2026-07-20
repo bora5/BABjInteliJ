@@ -1,5 +1,6 @@
 package rs.co.bora5.plugins.babj.action;
 
+import java.awt.BorderLayout;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -146,7 +147,7 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
                 .addSeparator()
                 .addComponent(overwriteCheck)
                 .getPanel();
-        JPanel additionalGenerators = FormBuilder.createFormBuilder()
+        JPanel additionalGeneratorsForm = FormBuilder.createFormBuilder()
                 .addComponent(exportCheck)
                 .addSeparator()
                 .addComponent(restCheck)
@@ -156,11 +157,13 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
                 .addComponent(reportCheck)
                 .addComponent(attachmentsCheck)
                 .getPanel();
-        JPanel agents = FormBuilder.createFormBuilder()
+        JPanel agentsForm = FormBuilder.createFormBuilder()
                 .addComponent(new JBLabel(
                         "Generate optional BABj agent integration for this entity."))
                 .addComponent(messagingCheck)
                 .getPanel();
+        JPanel additionalGenerators = topAligned(additionalGeneratorsForm);
+        JPanel agents = topAligned(agentsForm);
         JBTabbedPane tabs = new JBTabbedPane();
         JBScrollPane artifactsScroll = new JBScrollPane(artifacts);
         artifactsScroll.setBorder(null);
@@ -169,6 +172,12 @@ public class GenerateBABjCrudDialog extends DialogWrapper {
         tabs.addTab("Additional generators", additionalGenerators);
         tabs.addTab("Agent", agents);
         return tabs;
+    }
+
+    private static JPanel topAligned(JComponent content) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(content, BorderLayout.NORTH);
+        return panel;
     }
 
     @Override

@@ -15,6 +15,8 @@
               with a quick fix for generating a missing Edit&lt;Entity&gt;Window.</li>
           <li><b>Navigator</b> — gutter links and a visual tool window connect each Entity, DTO,
               Home, View, and EditWindow module.</li>
+          <li><b>Lifecycle Navigator</b> — diagrams BAB event execution, branches, inherited hooks,
+              concrete overrides, and framework side effects with direct code navigation.</li>
           <li><b>Smart completion</b> — suggests valid entity properties and complete column
               definitions inside BABj annotations.</li>
           <li><b>CRUD Designer</b> — selects and orders fields, chooses edit controls, and previews
@@ -29,6 +31,9 @@
     <change-notes><![CDATA[
         <h3>1.4.0</h3>
         <ul>
+          <li><b>Lifecycle Navigator</b> — explores event execution for concrete BAB classes as
+              interactive diagrams, resolves inherited and overridden hooks, visualizes branches
+              and side effects, and navigates directly to the relevant methods.</li>
           <li><b>Safer project scanning</b> — BABj Navigator and Agent Studio now scan in
               non-blocking background read actions, preventing UI freezes and PSI read-access
               errors.</li>
@@ -57,6 +62,10 @@
                     anchor="right"
                     icon="/icons/babjNavigate.svg"
                     factoryClass="rs.co.bora5.plugins.babj.navigation.BABjNavigatorToolWindowFactory"/>
+        <toolWindow id="BABj Lifecycle"
+                    anchor="right"
+                    icon="/icons/babjLifecycle.svg"
+                    factoryClass="rs.co.bora5.plugins.babj.lifecycle.BABjLifecycleToolWindowFactory"/>
         <toolWindow id="BABj Agent Studio"
                     anchor="right"
                     icon="/icons/babjNavigate.svg"
