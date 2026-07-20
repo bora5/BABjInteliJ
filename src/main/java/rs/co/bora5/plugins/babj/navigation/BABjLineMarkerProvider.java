@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.swing.Icon;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
@@ -21,7 +22,7 @@ public class BABjLineMarkerProvider implements com.intellij.codeInsight.daemon.L
             "/icons/babjNavigate.svg", BABjLineMarkerProvider.class);
 
     @Override
-    public @Nullable LineMarkerInfo<?> getLineMarkerInfo(PsiElement element) {
+    public @Nullable LineMarkerInfo<?> getLineMarkerInfo(@NotNull PsiElement element) {
         if (!(element instanceof PsiIdentifier) || !(element.getParent() instanceof PsiClass psiClass)
                 || DumbService.isDumb(element.getProject())) {
             return null;

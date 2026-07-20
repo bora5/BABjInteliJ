@@ -16,6 +16,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
+import com.intellij.ui.treeStructure.Tree;
 import org.jetbrains.annotations.NotNull;
 
 import com.intellij.openapi.editor.Editor;
@@ -62,7 +63,7 @@ public class BABjNavigatorToolWindowFactory implements ToolWindowFactory, DumbAw
 
         private final Project project;
         private final JBLabel status = new JBLabel("Place the caret in a BABj class.");
-        private final JTree tree = new JTree(new DefaultMutableTreeNode("No BABj module selected"));
+        private final JTree tree = new Tree(new DefaultMutableTreeNode("No BABj module selected"));
 
         private NavigatorPanel(Project project) {
             super(new BorderLayout(JBUI.scale(6), JBUI.scale(6)));
@@ -198,30 +199,23 @@ public class BABjNavigatorToolWindowFactory implements ToolWindowFactory, DumbAw
             return SmartPointerManager.getInstance(project).createSmartPsiElementPointer(target);
         }
 
-        private final class ArtifactNode {
-            private final String label;
-            private final SmartPsiElementPointer<PsiClass> pointer;
-
-            private ArtifactNode(String label, SmartPsiElementPointer<PsiClass> pointer) {
-                this.label = label;
-                this.pointer = pointer;
-            }
+        private record ArtifactNode(String label, SmartPsiElementPointer<PsiClass> pointer) {
 
             private PsiClass target() {
-                return pointer == null ? null : pointer.getElement();
-            }
+                        return pointer == null ? null : pointer.getElement();
+                    }
 
-            private boolean hasTarget() {
-                return pointer != null;
-            }
+                    private boolean hasTarget() {
+                        return pointer != null;
+                    }
 
-            @Override
-            public String toString() {
-                return label;
-            }
-        }
+                    @Override
+                    public @NotNull String toString() {
+                        return label;
+                    }
+                }
 
-        private final class ArtifactRenderer extends DefaultTreeCellRenderer {
+        private static final class ArtifactRenderer extends DefaultTreeCellRenderer {
             @Override
             public Component getTreeCellRendererComponent(javax.swing.JTree tree, Object value,
                                                           boolean selected, boolean expanded,

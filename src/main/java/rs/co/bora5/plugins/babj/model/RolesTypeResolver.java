@@ -13,6 +13,7 @@ import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiModifier;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.ClassInheritorsSearch;
+import org.jetbrains.annotations.NotNull;
 
 /** Finds application role registries and their inherited public string constants. */
 public final class RolesTypeResolver {
@@ -24,7 +25,7 @@ public final class RolesTypeResolver {
 
     public record RolesType(String simpleName, String qualifiedName, List<String> roleNames) {
         @Override
-        public String toString() {
+        public @NotNull String toString() {
             return simpleName;
         }
     }

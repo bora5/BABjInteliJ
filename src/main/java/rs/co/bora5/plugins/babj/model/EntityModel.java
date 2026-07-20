@@ -245,7 +245,7 @@ public final class EntityModel {
     }
 
     private static boolean isAbstractEntityType(PsiClass typeClass) {
-        return typeClass != null && InheritanceUtil.isInheritor(typeClass, ABSTRACT_ENTITY);
+        return InheritanceUtil.isInheritor(typeClass, ABSTRACT_ENTITY);
     }
 
     private static boolean hasAny(PsiModifierListOwner owner, String[] fqns) {

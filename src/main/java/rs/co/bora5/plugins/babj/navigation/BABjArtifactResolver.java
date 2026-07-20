@@ -65,7 +65,7 @@ public final class BABjArtifactResolver {
 
     public static @Nullable PsiClass entityFor(@Nullable PsiClass psiClass) {
         BABjArtifactRole role = roleOf(psiClass);
-        if (role == null || psiClass == null) {
+        if (role == null) {
             return null;
         }
         return switch (role) {
@@ -147,8 +147,7 @@ public final class BABjArtifactResolver {
                                      @Nullable PsiClass candidate) {
         BABjArtifactRole role = roleOf(candidate);
         PsiClass candidateEntity = entityFor(candidate);
-        if (role == null || candidate == null || candidateEntity == null
-                || !sameClass(entity, candidateEntity)) {
+        if (role == null || candidateEntity == null || !sameClass(entity, candidateEntity)) {
             return;
         }
         String key = candidate.getQualifiedName();
