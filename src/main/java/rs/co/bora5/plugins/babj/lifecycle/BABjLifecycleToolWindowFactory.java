@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import com.intellij.ide.util.PsiNavigationSupport;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.Document;
@@ -26,6 +27,7 @@ import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
@@ -193,7 +195,8 @@ public final class BABjLifecycleToolWindowFactory implements ToolWindowFactory, 
         }
 
         private void navigate(LifecycleDiagram.Node node) {
-            NavigationTarget target = ReadAction.compute(() -> navigationTarget(node));
+            NavigationTarget target = ApplicationManager.getApplication().runReadAction(
+                    (Computable<NavigationTarget>) () -> navigationTarget(node));
             if (target != null) {
                 PsiNavigationSupport.getInstance().createNavigatable(
                         project, target.file(), target.offset()).navigate(true);
