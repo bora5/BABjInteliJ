@@ -15,13 +15,14 @@ import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiLiteralExpression;
+import com.intellij.psi.PsiMethod;
 
 /**
  * Validates a {@code GenericView}'s {@code @ColumnNames} entries. Each entry is
  * {@code property~key~Header[~filterEnabled[~sortingEnabled]]}: the {@code property} path
- * (optionally {@code *}-prefixed) must resolve against the entity, and the {@code key} — when
- * present — must be a property projected by the service, i.e. a field of the view's DTO. The two
- * trailing boolean flags are optional.
+ * (optionally {@code *}-prefixed) must resolve against the entity or a JPQL alias declared by
+ * {@code getJoin()}, and the {@code key} — when present — must be a property projected by the
+ * service, i.e. a field of the view's DTO. The two trailing boolean flags are optional.
  */
 public class ColumnNamesInspection extends AbstractBaseJavaLocalInspectionTool {
 
@@ -50,6 +51,7 @@ public class ColumnNamesInspection extends AbstractBaseJavaLocalInspectionTool {
         }
 
         PsiClass dto = BABjPsi.typeArgument(aClass, GENERIC_VIEW, 2);
+        AliasResolver aliases = new AliasResolver(entity, joinClause(aClass));
         List<ProblemDescriptor> problems = new ArrayList<>();
 
         for (String entry : BABjPsi.splitTopLevel(value)) {
@@ -59,7 +61,12 @@ public class ColumnNamesInspection extends AbstractBaseJavaLocalInspectionTool {
                 prop = prop.substring(1);
             }
             if (!prop.isEmpty() && PATH.matcher(prop).matches()) {
-                String error = BABjPsi.validatePath(entity, prop.split("\\."), 0);
+                String[] segments = prop.split("\\.");
+                String alias = segments[0];
+                boolean usesAlias = segments.length > 1 && aliases.isKnown(alias);
+                String error = BABjPsi.validatePath(
+                        usesAlias ? aliases.classOf(alias) : entity,
+                        segments, usesAlias ? 1 : 0);
                 if (error != null) {
                     problems.add(problem(manager, literal, isOnTheFly,
                             "@ColumnNames: column '" + prop + "' — " + error + "."));
@@ -80,6 +87,15 @@ public class ColumnNamesInspection extends AbstractBaseJavaLocalInspectionTool {
         }
 
         return problems.isEmpty() ? null : problems.toArray(ProblemDescriptor.EMPTY_ARRAY);
+    }
+
+    private static @Nullable String joinClause(PsiClass view) {
+        PsiMethod joinMethod = BABjPsi.declaredMethod(view, "getJoin");
+        if (joinMethod == null) {
+            PsiClass home = BABjPsi.typeArgument(view, GENERIC_VIEW, 1);
+            joinMethod = home == null ? null : BABjPsi.declaredMethod(home, "getJoin");
+        }
+        return BABjPsi.stringValue(BABjPsi.firstLiteral(joinMethod));
     }
 
     private static void validateOptionalBoolean(String[] parts, int index, String label,

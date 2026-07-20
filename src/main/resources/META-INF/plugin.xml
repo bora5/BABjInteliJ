@@ -42,7 +42,8 @@
           <li><b>Controlled regeneration</b> — existing files can be recreated when explicitly
               enabled and confirmed; the default behavior still preserves them.</li>
           <li><b>Improved ColumnNames support</b> — optional filtering and sorting boolean flags
-              are accepted and validated.</li>
+              are accepted and validated, while joined paths resolve aliases declared by a View
+              or Home <code>getJoin()</code> implementation.</li>
           <li><b>Focused feature set</b> — the project-specific settings-administration generator
               has been removed.</li>
         </ul>

@@ -18,7 +18,8 @@ import com.intellij.psi.PsiClass;
 final class AliasResolver {
 
     // JOIN <src>.<field> <alias>  — FETCH and LEFT/INNER keywords are ignored by matching only JOIN.
-    private static final Pattern JOIN = Pattern.compile("JOIN\\s+(\\w+)\\.(\\w+)\\s+(\\w+)");
+    private static final Pattern JOIN = Pattern.compile(
+            "JOIN\\s+(\\w+)\\.(\\w+)\\s+(?:AS\\s+)?(\\w+)", Pattern.CASE_INSENSITIVE);
 
     private final Map<String, PsiClass> aliases = new HashMap<>();
 
