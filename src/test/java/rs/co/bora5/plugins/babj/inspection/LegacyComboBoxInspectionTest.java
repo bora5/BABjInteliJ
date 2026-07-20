@@ -59,6 +59,116 @@ public class LegacyComboBoxInspectionTest extends LightJavaCodeInsightFixtureTes
         assertFalse(result.contains("data.provider.DataProvider"));
     }
 
+    public void testFindsUniqueLabelsWhenRefreshCallsAndLabelsAreGrouped() {
+        myFixture.configureByText("EditDeviceWindow.java", """
+                package example;
+
+                import com.vaadin.flow.component.combobox.ComboBox;
+                import com.vaadin.flow.data.provider.DataProvider;
+                import rs.co.bora5.programs.bab.front.windowses.GenericWindow;
+
+                class Company {}
+                class Device {}
+                class Home<T> {
+                    java.util.stream.Stream<T> findAllLazy(
+                            int offset, int limit, String filter, String... fields) { return null; }
+                    int findSizeLazy(String filter, String... fields) { return 0; }
+                }
+
+                class EditDeviceWindow extends GenericWindow {
+                    Home<Company> companyEJB;
+                    Home<Device> deviceEJB;
+                    ComboBox<Company> cbCompany;
+                    ComboBox<Device> cbDevice;
+
+                    void createContent() {
+                        <caret>refreshCompany();
+                        refreshDevice();
+
+                        cbCompany.setLabel("Company:");
+                        cbDevice.setLabel("Device:");
+                    }
+
+                    private void refreshCompany() {
+                        DataProvider<Company, String> dataProvider =
+                                DataProvider.fromFilteringCallbacks(
+                                        query -> companyEJB.findAllLazy(query.getOffset(),
+                                                query.getLimit(),
+                                                query.getFilter().orElse(null), "name"),
+                                        query -> companyEJB.findSizeLazy(
+                                                query.getFilter().orElse(null), "name"));
+                        cbCompany = new ComboBox<>();
+                        cbCompany.setItems(dataProvider);
+                    }
+
+                    private void refreshDevice() {
+                        DataProvider<Device, String> dataProvider =
+                                DataProvider.fromFilteringCallbacks(
+                                        query -> deviceEJB.findAllLazy(query.getOffset(),
+                                                query.getLimit(),
+                                                query.getFilter().orElse(null), "name"),
+                                        query -> deviceEJB.findSizeLazy(
+                                                query.getFilter().orElse(null), "name"));
+                        cbDevice = new ComboBox<>();
+                        cbDevice.setItems(dataProvider);
+                    }
+                }
+                """);
+
+        launch("Replace with createSimpleComboBox()");
+
+        String result = myFixture.getFile().getText();
+        assertTrue(result.contains("cbCompany = createSimpleComboBox("
+                + "\"Company:\", companyEJB, \"name\");"));
+        assertFalse(result.contains("refreshCompany"));
+        assertTrue(result.contains("refreshDevice();"));
+        assertTrue(result.contains("cbDevice.setLabel(\"Device:\");"));
+    }
+
+    public void testDoesNotGuessWhenComboHasMultipleLabelsInMethod() {
+        myFixture.configureByText("EditCompanyWindow.java", """
+                package example;
+
+                import com.vaadin.flow.component.combobox.ComboBox;
+                import com.vaadin.flow.data.provider.DataProvider;
+                import rs.co.bora5.programs.bab.front.windowses.GenericWindow;
+
+                class Company {}
+                class CompanyHome {
+                    java.util.stream.Stream<Company> findAllLazy(
+                            int offset, int limit, String filter, String... fields) { return null; }
+                    int findSizeLazy(String filter, String... fields) { return 0; }
+                }
+
+                class EditCompanyWindow extends GenericWindow {
+                    CompanyHome companyEJB;
+                    ComboBox<Company> cbCompany;
+
+                    void createContent() {
+                        <caret>refreshCompany();
+                        cbCompany.setLabel("Company:");
+                        if (getAdmin()) {
+                            cbCompany.setLabel("Admin company:");
+                        }
+                    }
+
+                    private void refreshCompany() {
+                        DataProvider<Company, String> dataProvider =
+                                DataProvider.fromFilteringCallbacks(
+                                        query -> companyEJB.findAllLazy(query.getOffset(),
+                                                query.getLimit(),
+                                                query.getFilter().orElse(null), "name"),
+                                        query -> companyEJB.findSizeLazy(
+                                                query.getFilter().orElse(null), "name"));
+                        cbCompany = new ComboBox<>();
+                        cbCompany.setItems(dataProvider);
+                    }
+                }
+                """);
+
+        assertNoQuickFix("Replace with createSimpleComboBox()");
+    }
+
     public void testReplacesDependentProviderAndRemovesRedundantListener() {
         myFixture.configureByText("EditPartWindow.java", """
                 package example;

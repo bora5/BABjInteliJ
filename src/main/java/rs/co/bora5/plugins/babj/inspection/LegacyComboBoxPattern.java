@@ -1,7 +1,6 @@
 package rs.co.bora5.plugins.babj.inspection;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -138,7 +137,7 @@ final class LegacyComboBoxPattern {
         }
 
         PsiMethodCallExpression invocation = invocations.get(0);
-        PsiExpressionStatement labelStatement = adjacentLabel(invocationStatement, body.comboField());
+        PsiExpressionStatement labelStatement = uniqueLabel(invocationStatement, body.comboField());
         if (labelStatement == null) {
             return null;
         }
@@ -416,23 +415,20 @@ final class LegacyComboBoxPattern {
         return resolveVariable(call.getMethodExpression().getQualifierExpression());
     }
 
-    private static @Nullable PsiExpressionStatement adjacentLabel(PsiExpressionStatement invocation,
-                                                                  PsiField comboField) {
-        if (!(invocation.getParent() instanceof PsiCodeBlock block)) {
+    private static @Nullable PsiExpressionStatement uniqueLabel(PsiExpressionStatement invocation,
+                                                                PsiField comboField) {
+        PsiMethod containingMethod = PsiTreeUtil.getParentOfType(invocation, PsiMethod.class);
+        if (containingMethod == null) {
             return null;
         }
-        PsiStatement[] statements = block.getStatements();
-        int index = Arrays.asList(statements).indexOf(invocation);
-        if (index < 0) {
-            return null;
-        }
-        if (index + 1 < statements.length) {
-            PsiExpressionStatement result = labelStatement(statements[index + 1], comboField);
-            if (result != null) {
-                return result;
-            }
-        }
-        return index > 0 ? labelStatement(statements[index - 1], comboField) : null;
+        List<PsiExpressionStatement> labels = PsiTreeUtil
+                .findChildrenOfType(containingMethod, PsiExpressionStatement.class).stream()
+                .filter(statement -> PsiTreeUtil.getParentOfType(statement, PsiMethod.class)
+                        == containingMethod)
+                .filter(statement -> labelStatement(statement, comboField) != null)
+                .limit(2)
+                .toList();
+        return labels.size() == 1 ? labels.get(0) : null;
     }
 
     private static @Nullable PsiExpressionStatement labelStatement(PsiStatement statement,
