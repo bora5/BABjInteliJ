@@ -100,6 +100,9 @@ final class FeedbackPattern {
         }
         String variant = variants[0] instanceof PsiReferenceExpression reference
                 ? reference.getReferenceName() : null;
+        if (variant == null) {
+            return null;
+        }
         String helper = NOTIFICATION_METHODS.get(variant);
         return helper == null ? null : new NotificationMatch(call, helper,
                 show.getArgumentList().getExpressions()[0].getText());

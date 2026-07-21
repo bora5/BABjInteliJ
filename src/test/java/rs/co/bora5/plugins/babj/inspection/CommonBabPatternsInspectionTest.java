@@ -85,6 +85,25 @@ public class CommonBabPatternsInspectionTest extends LightJavaCodeInsightFixture
         assertFalse(result.contains("NotificationVariant"));
     }
 
+    public void testIgnoresComputedNotificationVariant() {
+        myFixture.configureByText("View.java", """
+                package example;
+                import com.vaadin.flow.component.notification.Notification;
+                import com.vaadin.flow.component.notification.NotificationVariant;
+                class View {
+                    NotificationVariant variant() {
+                        return NotificationVariant.LUMO_SUCCESS;
+                    }
+                    void save() {
+                        Notification.show("Saved").addThemeVariants(<caret>variant());
+                    }
+                }
+                """);
+
+        myFixture.doHighlighting();
+        assertNoQuickFix("Replace with NotificationFactory.showSuccess()");
+    }
+
     public void testReplacesImmediatelyOpenedLocalConfirmDialog() {
         myFixture.configureByText("View.java", """
                 package example;
