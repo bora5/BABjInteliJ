@@ -30,6 +30,14 @@
         ]]></description>
 
     <change-notes><![CDATA[
+        <h3>1.8.0</h3>
+        <ul>
+          <li><b>Declarative main-menu migration</b> — a new inspection recognizes standard
+              imperative <code>FavTab</code>, visibility, route, and role-switch menus and offers
+              an <code>Alt+Enter</code> quick fix that replaces them with BAB 1.8
+              <code>MenuDefinition</code>. Section and item order is preserved, roles are combined,
+              duplicate additions are removed, and custom or ambiguous menus are left untouched.</li>
+        </ul>
         <h3>1.7.0</h3>
         <ul>
           <li><b>Common BAB simplifications</b> — a new inspection offers safe quick fixes for
@@ -148,6 +156,14 @@
                          enabledByDefault="true"
                          level="WEAK WARNING"
                          implementationClass="rs.co.bora5.plugins.babj.inspection.CommonBabPatternsInspection"/>
+
+        <localInspection language="JAVA"
+                         shortName="BABjLegacyMainMenu"
+                         displayName="BABj: legacy main menu can use MenuDefinition"
+                         groupName="BABj"
+                         enabledByDefault="true"
+                         level="WEAK WARNING"
+                         implementationClass="rs.co.bora5.plugins.babj.inspection.LegacyMainMenuInspection"/>
     </extensions>
 
     <actions>

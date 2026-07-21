@@ -1,0 +1,14 @@
+<html>
+<body>
+Reports legacy BAB main menus that manually create <code>FavTab</code> instances, hide them, and
+enable them from a role switch.
+
+<p>The quick fix replaces the recognized <code>createMenuItems(...)</code> method with an immutable
+<code>createMenuDefinition()</code>. It preserves section and item order, combines roles that expose
+the same item, removes duplicate tab additions, and lets BAB derive visible tabs, routes, empty
+sections, direct-navigation checks, and safe favourites from the same definition.</p>
+
+<p>The inspection only offers the fix when it can recognize the complete standard pattern. Menus
+with custom statements or ambiguous section placement are left unchanged.</p>
+</body>
+</html>
