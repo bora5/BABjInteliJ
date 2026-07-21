@@ -1,6 +1,6 @@
 # BABj — IntelliJ IDEA Plugin
 
-[![Version](https://img.shields.io/badge/version-1.7.0-blue)](gradle.properties)
+[![Version](https://img.shields.io/badge/version-1.8.0-blue)](gradle.properties)
 [![IntelliJ IDEA](https://img.shields.io/badge/IntelliJ%20IDEA-2024.3%2B-purple)](https://www.jetbrains.com/idea/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
@@ -112,6 +112,11 @@ The plugin registers a dedicated **BABj** inspection group under
   calls may be grouped separately within the same method. It also recognizes one or more legacy
   admin-only `ComboBox` plus-button wrappers in the same block and replaces them with
   `comboWithAddButton(...)`, removing obsolete fields, conditionals, and imports.
+- **Legacy main-menu migration** recognizes the standard `FavTab`, `setVisible(...)`, and role
+  switch pattern in `GenericMainView` subclasses. Its quick fix creates a declarative
+  `MenuDefinition`, preserves section and item order, combines roles, and removes duplicate tab
+  additions. BAB then derives the visible menu, allowed routes, empty sections, and safe favourites
+  from that single definition.
 - **Common BAB simplifications** recognizes five BAB 1.7 patterns and offers focused quick fixes:
   strict `resultOrNull(...)` / `resultOrDefault(...)` JPA results, `handleUiTask(...)` asynchronous
   callbacks, semantic `NotificationFactory` and `ConfirmDialogs` calls, enum ComboBox factories,
