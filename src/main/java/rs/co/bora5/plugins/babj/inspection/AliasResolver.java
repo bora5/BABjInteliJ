@@ -34,7 +34,7 @@ final class AliasResolver {
             if (source == null) {
                 continue;
             }
-            PsiClass target = BABjPsi.propertyClass(source, m.group(2));
+            PsiClass target = BABjPsi.joinTargetClass(source, m.group(2));
             if (target != null) {
                 aliases.put(m.group(3), target);
             }

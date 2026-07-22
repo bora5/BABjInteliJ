@@ -37,6 +37,10 @@
               <code>Alt+Enter</code> quick fixes for BAB's <code>AbstractNotification</code>,
               <code>AbstractNotificationHome</code>, and generic notification centre. Custom and
               ambiguous implementations are reported without destructive rewriting.</li>
+          <li><b>Collection join aliases</b> — HomeSelect and ColumnNames validation now resolve a
+              join over <code>Collection</code>, <code>List</code>, <code>Set</code>,
+              <code>SortedSet</code>, or <code>Map</code> to its element or value entity instead of
+              incorrectly validating properties against the container type.</li>
         </ul>
         <h3>1.8.0</h3>
         <ul>

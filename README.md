@@ -100,7 +100,7 @@ The plugin registers a dedicated **BABj** inspection group under
 - **Missing Edit window** finds a `GenericView` without the conventional
   `Edit<Entity>Window` and provides an `Alt+Enter` quick fix.
 - **Home select validation** checks `getSelect()` property paths and resolves aliases declared in
-  `getJoin()`, including chained joins.
+  `getJoin()`, including chained joins and element types of collection-valued associations.
 - **ColumnNames validation** verifies entity paths and DTO keys. It accepts optional filter and
   sorting flags in `property~key~Label~filterEnabled~sortingEnabled` entries.
 - **Annotation property validation** checks references used by filters, visibility, status,
