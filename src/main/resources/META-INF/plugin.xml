@@ -30,6 +30,14 @@
         ]]></description>
 
     <change-notes><![CDATA[
+        <h3>1.9.0</h3>
+        <ul>
+          <li><b>Generic notification migration</b> — a new inspection recognizes legacy
+              notification entities, services, and custom header bells and offers conservative
+              <code>Alt+Enter</code> quick fixes for BAB's <code>AbstractNotification</code>,
+              <code>AbstractNotificationHome</code>, and generic notification centre. Custom and
+              ambiguous implementations are reported without destructive rewriting.</li>
+        </ul>
         <h3>1.8.0</h3>
         <ul>
           <li><b>Declarative main-menu migration</b> — a new inspection recognizes standard
@@ -164,6 +172,14 @@
                          enabledByDefault="true"
                          level="WEAK WARNING"
                          implementationClass="rs.co.bora5.plugins.babj.inspection.LegacyMainMenuInspection"/>
+
+        <localInspection language="JAVA"
+                         shortName="BABjLegacyNotification"
+                         displayName="BABj: legacy notifications can use the generic notification centre"
+                         groupName="BABj"
+                         enabledByDefault="true"
+                         level="WEAK WARNING"
+                         implementationClass="rs.co.bora5.plugins.babj.inspection.LegacyNotificationInspection"/>
     </extensions>
 
     <actions>
