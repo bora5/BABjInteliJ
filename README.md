@@ -1,6 +1,6 @@
 # BABj — IntelliJ IDEA Plugin
 
-[![Version](https://img.shields.io/badge/version-1.8.0-blue)](gradle.properties)
+[![Version](https://img.shields.io/badge/version-1.9.0-blue)](gradle.properties)
 [![IntelliJ IDEA](https://img.shields.io/badge/IntelliJ%20IDEA-2024.3%2B-purple)](https://www.jetbrains.com/idea/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
@@ -117,6 +117,11 @@ The plugin registers a dedicated **BABj** inspection group under
   `MenuDefinition`, preserves section and item order, combines roles, and removes duplicate tab
   additions. BAB then derives the visible menu, allowed routes, empty sections, and safe favourites
   from that single definition.
+- **Legacy notification migration** recognizes the standard notification entity, its `Home`, and
+  a custom `GenericMainView` notification bell. Separate `Alt+Enter` fixes migrate them to
+  `AbstractNotification`, `AbstractNotificationHome`, and `getNotificationProvider()`. Additional
+  entity fields are preserved, while customized constructors, navigation, or business side effects
+  prevent an automatic rewrite.
 - **Common BAB simplifications** recognizes five BAB 1.7 patterns and offers focused quick fixes:
   strict `resultOrNull(...)` / `resultOrDefault(...)` JPA results, `handleUiTask(...)` asynchronous
   callbacks, semantic `NotificationFactory` and `ConfirmDialogs` calls, enum ComboBox factories,
