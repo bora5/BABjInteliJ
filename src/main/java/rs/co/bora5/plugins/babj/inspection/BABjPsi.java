@@ -3,6 +3,7 @@ package rs.co.bora5.plugins.babj.inspection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -14,6 +15,7 @@ import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiLiteralExpression;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiType;
+import com.intellij.psi.util.InheritanceUtil;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtil;
 
@@ -25,6 +27,14 @@ import rs.co.bora5.plugins.babj.model.BABjNaming;
  * and splitting a projection/column string at top level.
  */
 final class BABjPsi {
+
+    private static final Set<String> ITERABLE_TYPES = Set.of(
+            "java.lang.Iterable", "java.util.Collection", "java.util.List", "java.util.Set",
+            "java.util.SortedSet", "java.util.NavigableSet", "java.util.Queue",
+            "java.util.Deque");
+    private static final Set<String> ITERABLE_SIMPLE_TYPES = Set.of(
+            "Iterable", "Collection", "List", "Set", "SortedSet", "NavigableSet", "Queue",
+            "Deque");
 
     private BABjPsi() {
     }
@@ -59,21 +69,46 @@ final class BABjPsi {
 
     /** The class a property navigates to (its field/getter type), or {@code null} for scalars. */
     static @Nullable PsiClass propertyClass(PsiClass owner, String name) {
-        PsiType type = null;
+        PsiType type = propertyType(owner, name);
+        return type == null ? null : PsiUtil.resolveClassInClassTypeOnly(type);
+    }
+
+    /**
+     * The entity type bound by a JPQL join on the property. For plural attributes this is the
+     * collection element type (or map value type), not the collection implementation itself.
+     */
+    static @Nullable PsiClass joinTargetClass(PsiClass owner, String name) {
+        PsiType type = propertyType(owner, name);
+        if (!(type instanceof PsiClassType classType)) {
+            return null;
+        }
+        PsiClass rawClass = classType.resolve();
+        PsiType[] parameters = classType.getParameters();
+        String qualifiedName = rawClass == null ? null : rawClass.getQualifiedName();
+        String simpleName = classType.getClassName();
+        if ("java.util.Map".equals(qualifiedName) || "Map".equals(simpleName)
+                || rawClass != null && InheritanceUtil.isInheritor(rawClass, "java.util.Map")) {
+            return parameters.length > 1 ? PsiUtil.resolveClassInClassTypeOnly(parameters[1]) : null;
+        }
+        if ((qualifiedName != null && ITERABLE_TYPES.contains(qualifiedName))
+                || (simpleName != null && ITERABLE_SIMPLE_TYPES.contains(simpleName))
+                || (rawClass != null && InheritanceUtil.isInheritor(rawClass, "java.lang.Iterable"))) {
+            return parameters.length > 0 ? PsiUtil.resolveClassInClassTypeOnly(parameters[0]) : null;
+        }
+        return rawClass;
+    }
+
+    private static @Nullable PsiType propertyType(PsiClass owner, String name) {
         PsiField field = owner.findFieldByName(name, true);
         if (field != null) {
-            type = field.getType();
-        } else {
-            String cap = BABjNaming.capitalize(name);
-            PsiMethod[] getters = owner.findMethodsByName("get" + cap, true);
-            if (getters.length == 0) {
-                getters = owner.findMethodsByName("is" + cap, true);
-            }
-            if (getters.length > 0) {
-                type = getters[0].getReturnType();
-            }
+            return field.getType();
         }
-        return type == null ? null : PsiUtil.resolveClassInClassTypeOnly(type);
+        String cap = BABjNaming.capitalize(name);
+        PsiMethod[] getters = owner.findMethodsByName("get" + cap, true);
+        if (getters.length == 0) {
+            getters = owner.findMethodsByName("is" + cap, true);
+        }
+        return getters.length > 0 ? getters[0].getReturnType() : null;
     }
 
     /**
