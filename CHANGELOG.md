@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- Legacy ComboBox inspection now also recognizes flag-filtered and "free" providers
+  (`findAllLazyWithFlag`, `findAllLazyFree`, `findAllLazyFreeWithFlag`) and offers quick fixes
+  that replace them with the new BAB factory methods `createComboBoxWithFlag(...)`,
+  `createFreeComboBox(...)` and `createFreeComboBoxWithFlag(...)`. An explicit `true` flag value
+  is dropped because the factories default to it.
+
 ## [1.4.0] - 2026-07-18
 
 ### Added

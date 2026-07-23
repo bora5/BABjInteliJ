@@ -37,7 +37,10 @@ final class LegacyComboBoxPattern {
 
     enum Kind {
         SIMPLE("createSimpleComboBox"),
-        DEPENDENT("createDependentComboBox");
+        DEPENDENT("createDependentComboBox"),
+        FLAG("createComboBoxWithFlag"),
+        FREE("createFreeComboBox"),
+        FREE_FLAG("createFreeComboBoxWithFlag");
 
         private final String factoryMethod;
 
@@ -59,8 +62,7 @@ final class LegacyComboBoxPattern {
                  @NotNull String serviceExpression,
                  @NotNull String labelExpression,
                  @NotNull List<String> searchFieldExpressions,
-                 @Nullable String dependencyPropertyExpression,
-                 @Nullable String parentComboExpression,
+                 @NotNull List<String> middleArgumentExpressions,
                  @NotNull List<PsiExpressionStatement> removableListeners) {
 
         String replacementStatement() {
@@ -71,11 +73,8 @@ final class LegacyComboBoxPattern {
                     .append(labelExpression)
                     .append(", ")
                     .append(serviceExpression);
-            if (kind == Kind.DEPENDENT) {
-                result.append(", ")
-                        .append(dependencyPropertyExpression)
-                        .append(", ")
-                        .append(parentComboExpression);
+            for (String middleArgument : middleArgumentExpressions) {
+                result.append(", ").append(middleArgument);
             }
             for (String searchField : searchFieldExpressions) {
                 result.append(", ").append(searchField);
@@ -89,18 +88,19 @@ final class LegacyComboBoxPattern {
                              @NotNull String comboExpression,
                              @NotNull String serviceExpression,
                              @NotNull List<String> searchFieldExpressions,
-                             @Nullable String dependencyPropertyExpression,
-                             @Nullable PsiVariable parentCombo,
-                             @Nullable String parentComboExpression) {
+                             @NotNull List<String> middleArgumentExpressions,
+                             @Nullable PsiVariable parentCombo) {
     }
 
     private record CallbackMatch(@NotNull Kind kind,
                                  @NotNull PsiVariable service,
                                  @NotNull String serviceExpression,
                                  @NotNull List<String> searchFieldExpressions,
-                                 @Nullable String dependencyPropertyExpression,
-                                 @Nullable PsiVariable parentCombo,
-                                 @Nullable String parentComboExpression) {
+                                 @NotNull List<String> middleArgumentExpressions,
+                                 @Nullable PsiVariable parentCombo) {
+    }
+
+    private record FlagArgument(boolean value, int filterIndex) {
     }
 
     private record StringArguments(@NotNull List<String> expressions,
@@ -155,8 +155,7 @@ final class LegacyComboBoxPattern {
 
         return new Match(body.kind(), refreshMethod, invocation, invocationStatement,
                 labelStatement, body.comboExpression(), body.serviceExpression(), labelExpression,
-                body.searchFieldExpressions(), body.dependencyPropertyExpression(),
-                body.parentComboExpression(), listeners);
+                body.searchFieldExpressions(), body.middleArgumentExpressions(), listeners);
     }
 
     private static @Nullable BodyMatch detectBody(PsiMethod method) {
@@ -228,8 +227,7 @@ final class LegacyComboBoxPattern {
         }
         return new BodyMatch(callback.kind(), assignedCombo, comboExpression,
                 callback.serviceExpression(), callback.searchFieldExpressions(),
-                callback.dependencyPropertyExpression(), callback.parentCombo(),
-                callback.parentComboExpression());
+                callback.middleArgumentExpressions(), callback.parentCombo());
     }
 
     private static boolean isFilteringCallbacksFactory(PsiMethodCallExpression call) {
@@ -270,6 +268,16 @@ final class LegacyComboBoxPattern {
                 && "findSizeLazyWithOtherEntity".equals(sizeName)) {
             return detectDependentCallbacks(fetch, size, fetchQuery, sizeQuery);
         }
+        if ("findAllLazyWithFlag".equals(fetchName) && "findSizeLazyWithFlag".equals(sizeName)) {
+            return detectFlagCallbacks(fetch, size, fetchQuery, sizeQuery);
+        }
+        if ("findAllLazyFree".equals(fetchName) && "findSizeLazyFree".equals(sizeName)) {
+            return detectFreeCallbacks(fetch, size, fetchQuery, sizeQuery);
+        }
+        if ("findAllLazyFreeWithFlag".equals(fetchName)
+                && "findSizeLazyFreeWithFlag".equals(sizeName)) {
+            return detectFreeFlagCallbacks(fetch, size, fetchQuery, sizeQuery);
+        }
         return null;
     }
 
@@ -297,7 +305,7 @@ final class LegacyComboBoxPattern {
         }
         return new CallbackMatch(Kind.SIMPLE, fetchService,
                 fetch.getMethodExpression().getQualifierExpression().getText(),
-                fetchFields.expressions(), null, null, null);
+                fetchFields.expressions(), List.of(), null);
     }
 
     private static @Nullable CallbackMatch detectDependentCallbacks(PsiMethodCallExpression fetch,
@@ -328,10 +336,138 @@ final class LegacyComboBoxPattern {
             return null;
         }
         PsiMethodCallExpression parentCall = (PsiMethodCallExpression) unwrap(fetchArgs[3]);
+        String parentComboExpression = Objects.requireNonNull(
+                parentCall.getMethodExpression().getQualifierExpression()).getText();
         return new CallbackMatch(Kind.DEPENDENT, fetchService,
                 fetch.getMethodExpression().getQualifierExpression().getText(),
-                fetchFields.expressions(), fetchArgs[2].getText(), fetchParent,
-                Objects.requireNonNull(parentCall.getMethodExpression().getQualifierExpression()).getText());
+                fetchFields.expressions(), List.of(fetchArgs[2].getText(), parentComboExpression),
+                fetchParent);
+    }
+
+    private static @Nullable CallbackMatch detectFlagCallbacks(PsiMethodCallExpression fetch,
+                                                                PsiMethodCallExpression size,
+                                                                PsiParameter fetchQuery,
+                                                                PsiParameter sizeQuery) {
+        PsiExpression[] fetchArgs = fetch.getArgumentList().getExpressions();
+        PsiExpression[] sizeArgs = size.getArgumentList().getExpressions();
+        PsiVariable fetchService = resolveVariable(fetch.getMethodExpression().getQualifierExpression());
+        PsiVariable sizeService = resolveVariable(size.getMethodExpression().getQualifierExpression());
+        if (fetchService == null || !fetchService.equals(sizeService)
+                || fetchArgs.length < 4 || sizeArgs.length < 2
+                || !isQueryCall(fetchArgs[0], fetchQuery, "getOffset")
+                || !isQueryCall(fetchArgs[1], fetchQuery, "getLimit")
+                || !sameStringLiteral(fetchArgs[2], sizeArgs[0])) {
+            return null;
+        }
+        FlagArgument fetchFlag = flagArgument(fetchArgs, 3, fetchQuery);
+        FlagArgument sizeFlag = flagArgument(sizeArgs, 1, sizeQuery);
+        if (fetchFlag == null || sizeFlag == null || fetchFlag.value() != sizeFlag.value()) {
+            return null;
+        }
+        StringArguments fetchFields = stringArguments(fetchArgs, fetchFlag.filterIndex() + 1);
+        StringArguments sizeFields = stringArguments(sizeArgs, sizeFlag.filterIndex() + 1);
+        if (fetchFields == null || sizeFields == null
+                || !fetchFields.values().equals(sizeFields.values())) {
+            return null;
+        }
+        List<String> middleArguments = fetchFlag.value()
+                ? List.of(fetchArgs[2].getText())
+                : List.of(fetchArgs[2].getText(), "false");
+        return new CallbackMatch(Kind.FLAG, fetchService,
+                fetch.getMethodExpression().getQualifierExpression().getText(),
+                fetchFields.expressions(), middleArguments, null);
+    }
+
+    private static @Nullable CallbackMatch detectFreeCallbacks(PsiMethodCallExpression fetch,
+                                                                PsiMethodCallExpression size,
+                                                                PsiParameter fetchQuery,
+                                                                PsiParameter sizeQuery) {
+        PsiExpression[] fetchArgs = fetch.getArgumentList().getExpressions();
+        PsiExpression[] sizeArgs = size.getArgumentList().getExpressions();
+        PsiVariable fetchService = resolveVariable(fetch.getMethodExpression().getQualifierExpression());
+        PsiVariable sizeService = resolveVariable(size.getMethodExpression().getQualifierExpression());
+        if (fetchService == null || !fetchService.equals(sizeService)
+                || fetchArgs.length < 4 || sizeArgs.length < 2
+                || !isQueryCall(fetchArgs[0], fetchQuery, "getOffset")
+                || !isQueryCall(fetchArgs[1], fetchQuery, "getLimit")
+                || !isFilterExpression(fetchArgs[2], fetchQuery)
+                || !isFilterExpression(sizeArgs[0], sizeQuery)
+                || !sameStringLiteral(fetchArgs[3], sizeArgs[1])) {
+            return null;
+        }
+        StringArguments fetchFields = stringArguments(fetchArgs, 4);
+        StringArguments sizeFields = stringArguments(sizeArgs, 2);
+        if (fetchFields == null || sizeFields == null
+                || !fetchFields.values().equals(sizeFields.values())) {
+            return null;
+        }
+        return new CallbackMatch(Kind.FREE, fetchService,
+                fetch.getMethodExpression().getQualifierExpression().getText(),
+                fetchFields.expressions(), List.of(fetchArgs[3].getText()), null);
+    }
+
+    private static @Nullable CallbackMatch detectFreeFlagCallbacks(PsiMethodCallExpression fetch,
+                                                                    PsiMethodCallExpression size,
+                                                                    PsiParameter fetchQuery,
+                                                                    PsiParameter sizeQuery) {
+        PsiExpression[] fetchArgs = fetch.getArgumentList().getExpressions();
+        PsiExpression[] sizeArgs = size.getArgumentList().getExpressions();
+        PsiVariable fetchService = resolveVariable(fetch.getMethodExpression().getQualifierExpression());
+        PsiVariable sizeService = resolveVariable(size.getMethodExpression().getQualifierExpression());
+        if (fetchService == null || !fetchService.equals(sizeService)
+                || fetchArgs.length < 5 || sizeArgs.length < 3
+                || !isQueryCall(fetchArgs[0], fetchQuery, "getOffset")
+                || !isQueryCall(fetchArgs[1], fetchQuery, "getLimit")
+                || !isFilterExpression(fetchArgs[2], fetchQuery)
+                || !isFilterExpression(sizeArgs[0], sizeQuery)
+                || !sameStringLiteral(fetchArgs[3], sizeArgs[1])
+                || !sameStringLiteral(fetchArgs[4], sizeArgs[2])) {
+            return null;
+        }
+        int fetchFieldsStart = 5;
+        int sizeFieldsStart = 3;
+        Boolean fetchFlagValue = fetchArgs.length > 5 ? booleanLiteralValue(fetchArgs[5]) : null;
+        Boolean sizeFlagValue = sizeArgs.length > 3 ? booleanLiteralValue(sizeArgs[3]) : null;
+        if (fetchFlagValue != null || sizeFlagValue != null) {
+            // createFreeComboBoxWithFlag has no flagValue overload, so only true is replaceable.
+            if (!Boolean.TRUE.equals(fetchFlagValue) || !Boolean.TRUE.equals(sizeFlagValue)) {
+                return null;
+            }
+            fetchFieldsStart = 6;
+            sizeFieldsStart = 4;
+        }
+        StringArguments fetchFields = stringArguments(fetchArgs, fetchFieldsStart);
+        StringArguments sizeFields = stringArguments(sizeArgs, sizeFieldsStart);
+        if (fetchFields == null || sizeFields == null
+                || !fetchFields.values().equals(sizeFields.values())) {
+            return null;
+        }
+        return new CallbackMatch(Kind.FREE_FLAG, fetchService,
+                fetch.getMethodExpression().getQualifierExpression().getText(),
+                fetchFields.expressions(),
+                List.of(fetchArgs[3].getText(), fetchArgs[4].getText()), null);
+    }
+
+    private static @Nullable FlagArgument flagArgument(PsiExpression[] arguments, int index,
+                                                       PsiParameter query) {
+        if (arguments.length <= index) {
+            return null;
+        }
+        if (isFilterExpression(arguments[index], query)) {
+            return new FlagArgument(true, index);
+        }
+        Boolean value = booleanLiteralValue(arguments[index]);
+        if (value != null && arguments.length > index + 1
+                && isFilterExpression(arguments[index + 1], query)) {
+            return new FlagArgument(value, index + 1);
+        }
+        return null;
+    }
+
+    private static @Nullable Boolean booleanLiteralValue(PsiExpression expression) {
+        PsiExpression unwrapped = unwrap(expression);
+        return unwrapped instanceof PsiLiteralExpression literal
+                && literal.getValue() instanceof Boolean value ? value : null;
     }
 
     private static @Nullable PsiMethodCallExpression lambdaCall(PsiLambdaExpression lambda) {

@@ -4,10 +4,18 @@ Reports legacy BABj ComboBox setup methods that manually create a lazy
 <code>DataProvider.fromFilteringCallbacks(...)</code> provider.
 
 <p>The quick fix replaces the refresh method and separate label call with
-<code>createSimpleComboBox(...)</code> or <code>createDependentComboBox(...)</code>. For dependent
+<code>createSimpleComboBox(...)</code>, <code>createDependentComboBox(...)</code>,
+<code>createComboBoxWithFlag(...)</code>, <code>createFreeComboBox(...)</code> or
+<code>createFreeComboBoxWithFlag(...)</code>. For dependent
 ComboBoxes it also removes a listener when the listener only refreshes the child data view and
 clears its selection, because the BAB factory already provides that behavior. Refresh calls and
 their unique label calls may appear in separate groups within the same method.</p>
+
+<p>For flag-filtered providers (<code>findAllLazyWithFlag</code>,
+<code>findAllLazyFreeWithFlag</code>) an explicit <code>true</code> flag value is dropped because
+the BAB factories default to it; <code>createComboBoxWithFlag</code> keeps an explicit
+<code>false</code>, while free flag providers with a non-<code>true</code> value are left
+untouched because no matching factory overload exists.</p>
 
 <p>The inspection also recognizes one or more standard admin-only ComboBox plus-button wrappers
 inside the same <code>if (getAdmin())</code> block. Its quick fix replaces them with
