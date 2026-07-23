@@ -106,10 +106,12 @@ The plugin registers a dedicated **BABj** inspection group under
 - **Annotation property validation** checks references used by filters, visibility, status,
   uniqueness, SQL-field, and `@PropertyId` annotations.
 - **Legacy ComboBox simplification** recognizes hand-written lazy `DataProvider` refresh methods
-  and provides an `Alt+Enter` quick fix that replaces them with `createSimpleComboBox(...)` or
-  `createDependentComboBox(...)`. The dependent conversion removes a redundant refresh listener
+  and provides an `Alt+Enter` quick fix that replaces them with `createSimpleComboBox(...)`,
+  `createDependentComboBox(...)`, `createComboBoxWithFlag(...)`, `createFreeComboBox(...)` or
+  `createFreeComboBoxWithFlag(...)`. The dependent conversion removes a redundant refresh listener
   only when it contains no additional business logic. Refresh calls and their unique `setLabel(...)`
-  calls may be grouped separately within the same method. It also recognizes one or more legacy
+  calls may be grouped separately within the same method. Flag conversions drop an explicit
+  `true` flag value because the BAB factories default to it. It also recognizes one or more legacy
   admin-only `ComboBox` plus-button wrappers in the same block and replaces them with
   `comboWithAddButton(...)`, removing obsolete fields, conditionals, and imports.
 - **Legacy main-menu migration** recognizes the standard `FavTab`, `setVisible(...)`, and role

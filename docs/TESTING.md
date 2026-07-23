@@ -227,6 +227,13 @@ the fix generates `createDependentComboBox(...)` and removes that redundant list
 third statement to the listener and confirm that no automatic fix is offered, preserving custom
 business behavior.
 
+Repeat with `findAllLazyWithFlag(...)` / `findSizeLazyWithFlag(...)` (with and without an explicit
+`true` flag value), `findAllLazyFree(...)` / `findSizeLazyFree(...)`, and
+`findAllLazyFreeWithFlag(...)` / `findSizeLazyFreeWithFlag(...)`. Expected: the fixes generate
+`createComboBoxWithFlag(...)`, `createFreeComboBox(...)`, and `createFreeComboBoxWithFlag(...)`;
+an explicit `true` flag value is dropped. Pass `false` to the free flag variant and confirm that
+no fix is offered because no matching factory overload exists.
+
 Create the legacy admin-only add-button pattern with `Button`, `HorizontalLayout`, the standard
 plus icon, and a two-step `editWindow.init(...); editWindow.open();` click listener. Add both the
 wrapper and plain ComboBox through a later `if (getAdmin()) ... else ...` block. Expected:

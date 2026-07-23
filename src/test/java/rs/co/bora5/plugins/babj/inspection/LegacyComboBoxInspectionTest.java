@@ -413,7 +413,7 @@ public class LegacyComboBoxInspectionTest extends LightJavaCodeInsightFixtureTes
         assertNoQuickFix("Replace admin ComboBox wrappers with comboWithAddButton()");
     }
 
-    public void testDoesNotReplaceUnsupportedFlagProvider() {
+    public void testReplacesFlagProvider() {
         myFixture.configureByText("EditCompanyWindow.java", """
                 package example;
 
@@ -453,7 +453,206 @@ public class LegacyComboBoxInspectionTest extends LightJavaCodeInsightFixtureTes
                 }
                 """);
 
-        assertNoQuickFix("Replace with createSimpleComboBox()");
+        launch("Replace with createComboBoxWithFlag()");
+
+        String result = myFixture.getFile().getText();
+        assertTrue(result.contains("cbCompany = createComboBoxWithFlag(\"Company\", companyEJB,"
+                + " \"active\", \"name\");"));
+        assertFalse(result.contains("refreshCompany"));
+        assertFalse(result.contains("data.provider.DataProvider"));
+    }
+
+    public void testReplacesFlagProviderAndDropsExplicitTrueFlagValue() {
+        myFixture.configureByText("EditCompanyWindow.java", """
+                package example;
+
+                import com.vaadin.flow.component.combobox.ComboBox;
+                import com.vaadin.flow.data.provider.DataProvider;
+                import rs.co.bora5.programs.bab.front.windowses.GenericWindow;
+
+                class Company {}
+                class CompanyHome {
+                    java.util.stream.Stream<Company> findAllLazyWithFlag(
+                            int offset, int limit, String flag, Boolean flagValue, String filter,
+                            String... fields) { return null; }
+                    int findSizeLazyWithFlag(String flag, Boolean flagValue, String filter,
+                            String... fields) { return 0; }
+                }
+
+                class EditCompanyWindow extends GenericWindow {
+                    CompanyHome companyEJB;
+                    ComboBox<Company> cbCompany;
+
+                    void createContent() {
+                        <caret>refreshCompany();
+                        cbCompany.setLabel("Company");
+                    }
+
+                    private void refreshCompany() {
+                        DataProvider<Company, String> dataProvider =
+                                DataProvider.fromFilteringCallbacks(
+                                        query -> companyEJB.findAllLazyWithFlag(query.getOffset(),
+                                                query.getLimit(), "active", true,
+                                                query.getFilter().orElse(null), "name"),
+                                        query -> companyEJB.findSizeLazyWithFlag("active", true,
+                                                query.getFilter().orElse(null), "name"));
+                        cbCompany = new ComboBox<>();
+                        cbCompany.setItems(dataProvider);
+                    }
+                }
+                """);
+
+        launch("Replace with createComboBoxWithFlag()");
+
+        String result = myFixture.getFile().getText();
+        assertTrue(result.contains("cbCompany = createComboBoxWithFlag(\"Company\", companyEJB,"
+                + " \"active\", \"name\");"));
+        assertFalse(result.contains("refreshCompany"));
+    }
+
+    public void testReplacesFreeProvider() {
+        myFixture.configureByText("EditServerWindow.java", """
+                package example;
+
+                import com.vaadin.flow.component.combobox.ComboBox;
+                import com.vaadin.flow.data.provider.DataProvider;
+                import rs.co.bora5.programs.bab.front.windowses.GenericWindow;
+
+                class Company {}
+                class CompanyHome {
+                    java.util.stream.Stream<Company> findAllLazyFree(
+                            int offset, int limit, String filter, String ignoreBy,
+                            String... fields) { return null; }
+                    int findSizeLazyFree(String filter, String ignoreBy,
+                            String... fields) { return 0; }
+                }
+
+                class EditServerWindow extends GenericWindow {
+                    CompanyHome companyEJB;
+                    ComboBox<Company> cbCompany;
+
+                    void createContent() {
+                        <caret>refreshCompany();
+                        cbCompany.setLabel("Company");
+                    }
+
+                    private void refreshCompany() {
+                        DataProvider<Company, String> dataProvider =
+                                DataProvider.fromFilteringCallbacks(
+                                        query -> companyEJB.findAllLazyFree(query.getOffset(),
+                                                query.getLimit(),
+                                                query.getFilter().orElse(null), "server", "name"),
+                                        query -> companyEJB.findSizeLazyFree(
+                                                query.getFilter().orElse(null), "server", "name"));
+                        cbCompany = new ComboBox<>();
+                        cbCompany.setItems(dataProvider);
+                    }
+                }
+                """);
+
+        launch("Replace with createFreeComboBox()");
+
+        String result = myFixture.getFile().getText();
+        assertTrue(result.contains("cbCompany = createFreeComboBox(\"Company\", companyEJB,"
+                + " \"server\", \"name\");"));
+        assertFalse(result.contains("refreshCompany"));
+        assertFalse(result.contains("data.provider.DataProvider"));
+    }
+
+    public void testReplacesFreeFlagProvider() {
+        myFixture.configureByText("EditServerWindow.java", """
+                package example;
+
+                import com.vaadin.flow.component.combobox.ComboBox;
+                import com.vaadin.flow.data.provider.DataProvider;
+                import rs.co.bora5.programs.bab.front.windowses.GenericWindow;
+
+                class Company {}
+                class CompanyHome {
+                    java.util.stream.Stream<Company> findAllLazyFreeWithFlag(
+                            int offset, int limit, String filter, String ignoreBy, String flag,
+                            String... fields) { return null; }
+                    int findSizeLazyFreeWithFlag(String filter, String ignoreBy, String flag,
+                            String... fields) { return 0; }
+                }
+
+                class EditServerWindow extends GenericWindow {
+                    CompanyHome companyEJB;
+                    ComboBox<Company> cbCompany;
+
+                    void createContent() {
+                        <caret>refreshCompany();
+                        cbCompany.setLabel("Company");
+                    }
+
+                    private void refreshCompany() {
+                        DataProvider<Company, String> dataProvider =
+                                DataProvider.fromFilteringCallbacks(
+                                        query -> companyEJB.findAllLazyFreeWithFlag(
+                                                query.getOffset(), query.getLimit(),
+                                                query.getFilter().orElse(null), "server",
+                                                "active", "name"),
+                                        query -> companyEJB.findSizeLazyFreeWithFlag(
+                                                query.getFilter().orElse(null), "server",
+                                                "active", "name"));
+                        cbCompany = new ComboBox<>();
+                        cbCompany.setItems(dataProvider);
+                    }
+                }
+                """);
+
+        launch("Replace with createFreeComboBoxWithFlag()");
+
+        String result = myFixture.getFile().getText();
+        assertTrue(result.contains("cbCompany = createFreeComboBoxWithFlag(\"Company\","
+                + " companyEJB, \"server\", \"active\", \"name\");"));
+        assertFalse(result.contains("refreshCompany"));
+        assertFalse(result.contains("data.provider.DataProvider"));
+    }
+
+    public void testDoesNotReplaceFreeFlagProviderWithFalseFlagValue() {
+        myFixture.configureByText("EditServerWindow.java", """
+                package example;
+
+                import com.vaadin.flow.component.combobox.ComboBox;
+                import com.vaadin.flow.data.provider.DataProvider;
+                import rs.co.bora5.programs.bab.front.windowses.GenericWindow;
+
+                class Company {}
+                class CompanyHome {
+                    java.util.stream.Stream<Company> findAllLazyFreeWithFlag(
+                            int offset, int limit, String filter, String ignoreBy, String flag,
+                            Boolean flagValue, String... fields) { return null; }
+                    int findSizeLazyFreeWithFlag(String filter, String ignoreBy, String flag,
+                            Boolean flagValue, String... fields) { return 0; }
+                }
+
+                class EditServerWindow extends GenericWindow {
+                    CompanyHome companyEJB;
+                    ComboBox<Company> cbCompany;
+
+                    void createContent() {
+                        <caret>refreshCompany();
+                        cbCompany.setLabel("Company");
+                    }
+
+                    private void refreshCompany() {
+                        DataProvider<Company, String> dataProvider =
+                                DataProvider.fromFilteringCallbacks(
+                                        query -> companyEJB.findAllLazyFreeWithFlag(
+                                                query.getOffset(), query.getLimit(),
+                                                query.getFilter().orElse(null), "server",
+                                                "active", false, "name"),
+                                        query -> companyEJB.findSizeLazyFreeWithFlag(
+                                                query.getFilter().orElse(null), "server",
+                                                "active", false, "name"));
+                        cbCompany = new ComboBox<>();
+                        cbCompany.setItems(dataProvider);
+                    }
+                }
+                """);
+
+        assertNoQuickFix("Replace with createFreeComboBoxWithFlag()");
     }
 
     private void launch(String name) {
@@ -555,6 +754,18 @@ public class LegacyComboBoxInspectionTest extends LightJavaCodeInsightFixtureTes
                     protected <P, A, H> ComboBox<A> createDependentComboBox(
                             String caption, H service, String dependsOn,
                             ComboBox<P> parent, String... searchFields) { return null; }
+                    protected <A, H> ComboBox<A> createComboBoxWithFlag(
+                            String caption, H service, String flag,
+                            String... searchFields) { return null; }
+                    protected <A, H> ComboBox<A> createComboBoxWithFlag(
+                            String caption, H service, String flag, Boolean flagValue,
+                            String... searchFields) { return null; }
+                    protected <A, H> ComboBox<A> createFreeComboBox(
+                            String caption, H service, String ignoreBy,
+                            String... searchFields) { return null; }
+                    protected <A, H> ComboBox<A> createFreeComboBoxWithFlag(
+                            String caption, H service, String ignoreBy, String flag,
+                            String... searchFields) { return null; }
                     protected boolean getAdmin() { return false; }
                     protected <A> HorizontalLayout comboWithAddButton(
                             ComboBox<A> combo, java.util.function.Consumer<Object> listener) {
